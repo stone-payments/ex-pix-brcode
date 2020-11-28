@@ -30,6 +30,27 @@ defmodule ExPixBRCode.DecoderTest do
                 }}
     end
 
+    test "can handle non-ascii characters" do
+      assert Decoder.decode(
+               "00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-4266554400005204000053039865802BR5913Fulano de Tal6008BRASÍLIA62070503***6304B4F6"
+             ) ==
+               {:ok,
+                %{
+                  "additional_data_field_template" => %{"reference_label" => "***"},
+                  "country_code" => "BR",
+                  "crc" => "B4F6",
+                  "merchant_account_information" => %{
+                    "gui" => "br.gov.bcb.pix",
+                    "chave" => "123e4567-e12b-12d1-a456-426655440000"
+                  },
+                  "merchant_category_code" => "0000",
+                  "merchant_city" => "BRASÍLIA",
+                  "merchant_name" => "Fulano de Tal",
+                  "payload_format_indicator" => "01",
+                  "transaction_currency" => "986"
+                }}
+    end
+
     test "fails when encoded length is invalid" do
       invalid_units_digit_length = "000AXYZ2BFE"
       invalid_tens_digit_length = "00A0XYZA8E8"

@@ -166,28 +166,31 @@ defmodule ExPixBRCode.Decoder do
     # ?0 (the ASCII value for "0") from both size_tens and size_units.
     len = (size_tens - ?0) * 10 + (size_units - ?0)
 
-    case rest do
-      <<value::binary-size(len), rest::binary>> ->
-        case Map.get(keys, key) do
-          {key, sub_keys} ->
-            value = do_parse(value, opts, sub_keys, %{})
-            acc = Map.put(acc, key, value)
-            do_parse(rest, opts, keys, acc)
+    {value, rest} = String.split_at(rest, len)
+    effective_length = String.length(value)
 
-          key when is_binary(key) ->
-            acc = Map.put(acc, key, value)
-            do_parse(rest, opts, keys, acc)
+    strict_validation = Keyword.get(opts, :strict_validation, false)
 
-          nil ->
-            if Keyword.get(opts, :strict_validation, false) do
-              do_parse(rest, opts, keys, acc)
-            else
-              {:error, :validation, {:unknown_key, key}}
-            end
-        end
+    result = Map.get(keys, key)
+
+    case {effective_length, result, strict_validation} do
+      {effective_length, _result, _strict_validation} when effective_length != len ->
+        {:error, {:validation, {:unexpected_value_length_for_key, key}}}
+
+      {_, {key, sub_keys}, _} ->
+        value = do_parse(value, opts, sub_keys, %{})
+        acc = Map.put(acc, key, value)
+        do_parse(rest, opts, keys, acc)
+
+      {_, key, _} when is_binary(key) ->
+        acc = Map.put(acc, key, value)
+        do_parse(rest, opts, keys, acc)
+
+      {_, nil, false} ->
+        do_parse(rest, opts, keys, acc)
 
       _ ->
-        {:error, {:validation, {:unexpected_value_length_for_key, key}}}
+        {:error, :validation, {:unknown_key, key}}
     end
   end
 
