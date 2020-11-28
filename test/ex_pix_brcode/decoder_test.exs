@@ -29,6 +29,24 @@ defmodule ExPixBRCode.DecoderTest do
                   "transaction_currency" => "986"
                 }}
     end
+
+    test "fails when encoded length is invalid" do
+      invalid_units_digit_length = "000AXYZ2BFE"
+      invalid_tens_digit_length = "00A0XYZA8E8"
+
+      assert {:error, {:validation, :invalid_tag_length_value}} ==
+               Decoder.decode(invalid_units_digit_length)
+
+      assert {:error, {:validation, :invalid_tag_length_value}} ==
+               Decoder.decode(invalid_tens_digit_length)
+    end
+
+    test "fails when value has incorrect length" do
+      encoded = "421337BF8A"
+
+      assert {:error, {:validation, {:unexpected_value_length_for_key, "42"}}} ==
+               Decoder.decode(encoded)
+    end
   end
 
   describe "decode_to/2" do

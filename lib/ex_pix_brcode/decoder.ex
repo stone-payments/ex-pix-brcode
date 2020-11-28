@@ -158,27 +158,28 @@ defmodule ExPixBRCode.Decoder do
     # ?0 (the ASCII value for "0") from both size_tens and size_units.
     len = (size_tens - ?0) * 10 + (size_units - ?0)
 
-    with {:value, <<value::binary-size(len), rest::binary>>} <- {:value, rest} do
-      case Map.get(keys, key) do
-        {key, sub_keys} ->
-          value = do_parse(value, opts, sub_keys, %{})
-          acc = Map.put(acc, key, value)
-          do_parse(rest, opts, keys, acc)
-
-        key when is_binary(key) ->
-          acc = Map.put(acc, key, value)
-          do_parse(rest, opts, keys, acc)
-
-        nil ->
-          if Keyword.get(opts, :strict_validation, false) do
+    case rest do
+      <<value::binary-size(len), rest::binary>> ->
+        case Map.get(keys, key) do
+          {key, sub_keys} ->
+            value = do_parse(value, opts, sub_keys, %{})
+            acc = Map.put(acc, key, value)
             do_parse(rest, opts, keys, acc)
-          else
-            {:error, :validation, {:unknown_key, key}}
-          end
-      end
-    else
-      {:parsed_size, :error} -> {:error, {:validation, :size_not_an_integer}}
-      error -> {:error, {:unknown_error, error}}
+
+          key when is_binary(key) ->
+            acc = Map.put(acc, key, value)
+            do_parse(rest, opts, keys, acc)
+
+          nil ->
+            if Keyword.get(opts, :strict_validation, false) do
+              do_parse(rest, opts, keys, acc)
+            else
+              {:error, :validation, {:unknown_key, key}}
+            end
+        end
+
+      _ ->
+        {:error, {:validation, {:unexpected_value_length_for_key, key}}}
     end
   end
 
