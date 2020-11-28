@@ -66,7 +66,15 @@ defmodule ExPixBRCode.Decoder do
              }}
   """
   @spec decode(input :: iodata(), Keyword.t()) ::
-          {:ok, term()} | {:error, {:validation, atom() | String.t()} | :unknown_error}
+          {:ok, term()}
+          | {:error,
+             {:validation,
+              :invalid_tag_length_value
+              | :invalid_crc
+              | {:unexpected_value_length_for_key, String.t()}
+              | {:unknown_key, String.t()}}
+             | :unknown_error}
+
   def decode(input, opts \\ []) do
     brcode = IO.iodata_to_binary(input)
     {contents, crc} = extract_crc(brcode)

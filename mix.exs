@@ -26,7 +26,6 @@ defmodule ExPixBRCode.MixProject do
       {:joken, "~> 2.3.0"},
       {:jason, "~> 1.2.2"},
       {:x509, "~> 0.8.2"},
-      {:benchee, "~> 1.0.1"},
 
       # test
       {:hackney, "~> 1.16.0", only: :test},
