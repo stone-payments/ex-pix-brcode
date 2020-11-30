@@ -70,46 +70,58 @@ defmodule ExPixBRCode.Decoder do
           | {:error,
              {:validation,
               :invalid_tag_length_value
-              | :invalid_crc
               | {:unexpected_value_length_for_key, String.t()}
               | {:unknown_key, String.t()}}
-             | :unknown_error}
+             | :unknown_error
+             | :invalid_crc
+             | :invalid_input_length}
 
   def decode(input, opts \\ []) do
     brcode = IO.iodata_to_binary(input)
-    {contents, crc} = extract_crc(brcode)
 
-    check_crc =
+    with {:ok, {contents, crc}} <- extract_crc(brcode),
+         :ok <- validate_crc(contents, crc) do
+      parse(brcode, opts)
+    end
+  end
+
+  # This is basically String.split_at(binary, -4),
+  # optimized using the facts that we only have
+  # 1-byte characters in the CRC and that we can count
+  # right to left. The guard is needed so that
+  # binary_part/3 doesn't raise
+  defp extract_crc(binary) when byte_size(binary) > 4 do
+    len = byte_size(binary)
+    crc = binary_part(binary, len, -4)
+    val = binary_part(binary, 0, len - 4)
+    {:ok, {val, crc}}
+  end
+
+  defp extract_crc(_binary), do: {:error, :invalid_input_length}
+
+  defp validate_crc(contents, received_crc) do
+    calculated_crc =
       contents
       |> CRC.ccitt_16()
       |> Integer.to_string(16)
       |> String.pad_leading(4, "0")
 
-    if check_crc == crc do
-      case do_parse(brcode, opts) do
-        result when is_map(result) ->
-          {:ok, result}
-
-        error ->
-          error
-      end
+    if received_crc == calculated_crc do
+      :ok
     else
       {:error, :invalid_crc}
     end
   end
 
-  # This is basically String.split_at(binary, -4),
-  # optimized using the fact that we only have
-  # 1-byte characters.
-  # The guard is needed so binary_part/3 doesn't raise
-  defp extract_crc(binary) when byte_size(binary) > 4 do
-    len = byte_size(binary)
-    crc = binary_part(binary, len, -4)
-    val = binary_part(binary, 0, len - 4)
-    {val, crc}
-  end
+  defp parse(brcode, opts) do
+    case do_parse(brcode, opts) do
+      result when is_map(result) ->
+        {:ok, result}
 
-  defp extract_crc(binary), do: {"", binary}
+      error ->
+        error
+    end
+  end
 
   @doc """
   Decode an iodata to a given schema module.
@@ -136,6 +148,8 @@ defmodule ExPixBRCode.Decoder do
     end
   end
 
+  # This guard ensures a number is the integer representation of the
+  # ASCII characters 0 through 9, inclusive
   defguardp is_digit(value) when is_integer(value) and value >= ?0 and value <= ?9
 
   defp do_parse(brcode, opts, keys \\ @keys, acc \\ %{})
@@ -162,8 +176,8 @@ defmodule ExPixBRCode.Decoder do
     # Having the tens-place digit and the units-place digit,
     # we need to multiply size_tens by 10 to shift it to the
     # left (e.g. if size_tens is "3", we want to add 30).
-    # However, since they are ascii encoded, we need to also subtract
-    # ?0 (the ASCII value for "0") from both size_tens and size_units.
+    # However, since they are ascii encoded, we also need to subtract
+    # ?0 (the ASCII value for "0") from both `size_tens` and `size_units`.
     len = (size_tens - ?0) * 10 + (size_units - ?0)
 
     {value, rest} = String.split_at(rest, len)
@@ -192,6 +206,16 @@ defmodule ExPixBRCode.Decoder do
       _ ->
         {:error, :validation, {:unknown_key, key}}
     end
+  end
+
+  defp do_parse(
+         <<key::binary-size(2), size_tens::size(8), size_units::size(8), _rest::binary>>,
+         _opts,
+         _keys,
+         _acc
+       )
+       when not is_digit(size_tens) or not is_digit(size_units) do
+    {:error, {:validation, {:invalid_length_for_tag, key}}}
   end
 
   defp do_parse(_, _, _, _), do: {:error, {:validation, :invalid_tag_length_value}}

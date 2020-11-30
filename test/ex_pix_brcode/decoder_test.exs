@@ -55,11 +55,21 @@ defmodule ExPixBRCode.DecoderTest do
       invalid_units_digit_length = "000AXYZ2BFE"
       invalid_tens_digit_length = "00A0XYZA8E8"
 
-      assert {:error, {:validation, :invalid_tag_length_value}} ==
+      assert {:error, {:validation, {:invalid_length_for_tag, "00"}}} ==
                Decoder.decode(invalid_units_digit_length)
 
-      assert {:error, {:validation, :invalid_tag_length_value}} ==
+      assert {:error, {:validation, {:invalid_length_for_tag, "00"}}} ==
                Decoder.decode(invalid_tens_digit_length)
+    end
+
+    test "fails when upon corrupted data" do
+      # The correct CRC would be "2BFE"
+      valid_data = "000AXYZ"
+      invalid_crc = "EFB2"
+      input = valid_data <> invalid_crc
+
+      assert {:error, :invalid_crc} ==
+               Decoder.decode(input)
     end
 
     test "fails when value has incorrect length" do
