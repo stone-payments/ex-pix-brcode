@@ -105,13 +105,13 @@ defmodule ExPixBRCode.DynamicPIXLoaderTest do
                 },
                 chave: "14413050762",
                 devedor: nil,
-                infoAdicionais: '',
+                infoAdicionais: [],
                 revisao: 0,
                 solicitacaoPagador: nil,
                 status: :ATIVA,
                 txid: "4DE46328260C11EB91C04049FC2CA371",
                 valor: %Valor{original: Decimal.new("1.00")}
-              }} == DynamicPIXLoader.load_pix(@client, pix_url)
+              }} == DynamicPIXLoader.load_pix(@client, pix_url) |> IO.inspect()
 
       x5t = ctx.jwks["keys"] |> hd() |> Map.get("x5t")
       kid = ctx.jwks["keys"] |> hd() |> Map.get("kid")

@@ -5,19 +5,73 @@ Biblioteca Elixir para validação e leitura de BRCodes destinados ao sistema Pi
 Para a leitura de um BRCode basta:
 
 ``` elixir
-{:ok, brcode_map} = ExPixBRCode.Decoder.decode(brcode)
+{:ok,
+   %{
+     "additional_data_field_template" => %{"reference_label" => "***"},
+     "country_code" => "BR",
+     "crc" => "1D3D",
+     "merchant_account_information" => %{
+       "gui" => "br.gov.bcb.pix",
+       "chave" => "123e4567-e12b-12d1-a456-426655440000"
+     },
+     "merchant_category_code" => "0000",
+     "merchant_city" => "BRASILIA",
+     "merchant_name" => "Fulano de Tal",
+     "payload_format_indicator" => "01",
+     "transaction_currency" => "986"
+   }} = ExPixBRCode.Decoder.decode(brcode)
 ```
 
 Ou fazendo o cast para um `Ecto.Schema`:
 
 ``` elixir
-{:ok, %ExPixBRCode.Models.BRCode{} = brcode_struct} = ExPixBRCode.Decoder.decode_to(brcode)
+alias ExPixBRCode.Models.BRCode
+alias ExPixBRCode.Models.BRCode.{AdditionalDataField, MerchantAccountInfo}
+
+{:ok,
+ %BRCode{
+   additional_data_field_template: %AdditionalDataField{
+     reference_label: "***"
+   },
+   country_code: "BR",
+   crc: "1D3D",
+   merchant_account_information: %MerchantAccountInfo{
+     chave: "123e4567-e12b-12d1-a456-426655440000",
+     gui: "br.gov.bcb.pix",
+     info_adicional: nil,
+     url: nil
+   },
+   merchant_category_code: "0000",
+   merchant_city: "BRASILIA",
+   merchant_name: "Fulano de Tal",
+   payload_format_indicator: "01",
+   point_of_initiation_method: nil,
+   transaction_amount: nil,
+   transaction_currency: "986",
+   type: :static
+ }} = ExPixBRCode.Decoder.decode_to(brcode)
 ```
 
 Após o decode, caso o type seja de algum Pix dinâmico, é necessário carregar os dados do JWS. Para isso, basta:
 
 ``` elixir
-{:ok, %ExPixBRCode.Models.PixPayment{} = payment} = ExPixBRCode.DynamicPixLoader.load_pix(client, url)
+ExPixBRCode.DynamicPixLoader.load_pix(client, url) |> IO.inspect()
+{:ok,
+ %ExPixBRCode.Models.PixPayment{
+   calendario: %ExPixBRCode.Models.PixPayment.Calendario{
+     apresentacao: ~U[2020-11-28 03:15:39Z],
+     criacao: ~U[2020-11-13 23:59:49Z],
+     expiracao: 86400
+   },
+   chave: "14413050762",
+   devedor: nil,
+   infoAdicionais: [],
+   revisao: 0,
+   solicitacaoPagador: nil,
+   status: :ATIVA,
+   txid: "4DE46328260C11EB91C04049FC2CA371",
+   valor: %ExPixBRCode.Models.PixPayment.Valor{original: #Decimal<1.00>}
+ }} 
 ```
 
 Nesse caso há dois parâmetros: uma instância de `Tesla.Client` e a URL do Pix que deve retornar um JWS válido.
