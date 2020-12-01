@@ -29,6 +29,55 @@ defmodule ExPixBRCode.DecoderTest do
                   "transaction_currency" => "986"
                 }}
     end
+
+    test "can handle non-ascii characters" do
+      assert Decoder.decode(
+               "00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-4266554400005204000053039865802BR5913Fulano de Tal6008BRASÍLIA62070503***6304B4F6"
+             ) ==
+               {:ok,
+                %{
+                  "additional_data_field_template" => %{"reference_label" => "***"},
+                  "country_code" => "BR",
+                  "crc" => "B4F6",
+                  "merchant_account_information" => %{
+                    "gui" => "br.gov.bcb.pix",
+                    "chave" => "123e4567-e12b-12d1-a456-426655440000"
+                  },
+                  "merchant_category_code" => "0000",
+                  "merchant_city" => "BRASÍLIA",
+                  "merchant_name" => "Fulano de Tal",
+                  "payload_format_indicator" => "01",
+                  "transaction_currency" => "986"
+                }}
+    end
+
+    test "fails when encoded length is invalid" do
+      invalid_units_digit_length = "000AXYZ2BFE"
+      invalid_tens_digit_length = "00A0XYZA8E8"
+
+      assert {:error, {:validation, {:invalid_length_for_tag, "00"}}} ==
+               Decoder.decode(invalid_units_digit_length)
+
+      assert {:error, {:validation, {:invalid_length_for_tag, "00"}}} ==
+               Decoder.decode(invalid_tens_digit_length)
+    end
+
+    test "fails when upon corrupted data" do
+      # The correct CRC would be "2BFE"
+      valid_data = "000AXYZ"
+      invalid_crc = "EFB2"
+      input = valid_data <> invalid_crc
+
+      assert {:error, :invalid_crc} ==
+               Decoder.decode(input)
+    end
+
+    test "fails when value has incorrect length" do
+      encoded = "421337BF8A"
+
+      assert {:error, {:validation, {:unexpected_value_length_for_key, "42"}}} ==
+               Decoder.decode(encoded)
+    end
   end
 
   describe "decode_to/2" do
