@@ -3,6 +3,7 @@ defmodule ExPixBRCode.Changesets do
   Helper module for custom validations and casting external input.
   """
 
+  import Ecto.Changeset
   alias Ecto.Changeset
 
   require Logger
@@ -16,14 +17,14 @@ defmodule ExPixBRCode.Changesets do
     params
     |> schema_module.changeset()
     |> case do
-      %{valid?: true} = changeset -> {:ok, Changeset.apply_changes(changeset)}
+      %{valid?: true} = changeset -> {:ok, apply_changes(changeset)}
       changeset -> {:error, {type, changeset}}
     end
   end
 
   @spec validate_document(Changeset.t(), atom) :: Changeset.t()
   def validate_document(changeset, field) do
-    Changeset.validate_change(changeset, field, fn field, value ->
+    validate_change(changeset, field, fn field, value ->
       if valid_document?(value, field) do
         []
       else
@@ -57,4 +58,25 @@ defmodule ExPixBRCode.Changesets do
   end
 
   def valid_document?(_document, _field), do: false
+
+  @doc """
+  'chave' and 'infoAdicional' validation.
+
+  These fields have the following rules:
+    - 
+  """
+  def validate_chave_and_info_adicional_length(%{valid?: false} = c, _, _, _), do: c
+
+  def validate_chave_and_info_adicional_length(changeset, chave, info_adicional, message) do
+    [chave, info_adicional]
+    |> Enum.join()
+    |> String.length()
+    |> case do
+      length when length > 99 ->
+        add_error(changeset, :chave_and_info_adicional_length, message)
+
+      _ ->
+        changeset
+    end
+  end
 end

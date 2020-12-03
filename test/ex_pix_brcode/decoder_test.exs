@@ -1,12 +1,9 @@
 defmodule ExPixBRCode.DecoderTest do
   use ExUnit.Case, async: true
 
-  alias ExPixBRCode.Decoder
-  alias ExPixBRCode.Models.BRCode
-  alias ExPixBRCode.Models.BRCode.{AdditionalDataField, MerchantAccountInfo}
-
-  test "bu" do
-  end
+  alias ExPixBRCode.BRCodes.Decoder
+  alias ExPixBRCode.BRCodes.Models.BRCode
+  alias ExPixBRCode.BRCodes.Models.BRCode.{AdditionalDataField, MerchantAccountInfo}
 
   describe "decode/2" do
     test "succeeds on BACEN example" do
