@@ -28,7 +28,7 @@ defmodule ExPixBRCode.MixProject do
       {:x509, "~> 0.8.2"},
 
       # test
-      {:hackney, "~> 1.16.0", only: :test},
+      {:hackney, "~> 1.16.0"},
       {:mox, "~> 1.0", only: :test}
     ]
   end

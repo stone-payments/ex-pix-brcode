@@ -1,14 +1,11 @@
-defmodule ExPixBRCode.Models.JWSHeaders do
+defmodule ExPixBRCode.JWS.Models.JWSHeaders do
   @moduledoc """
   Mandatory JWS headers we MUST validate according to the spec.
   """
 
-  use Ecto.Schema
-  import Ecto.Changeset
+  use ExPixBRCode.ValueObject
 
   @required [:jku, :kid, :x5t, :alg]
-
-  @primary_key false
 
   embedded_schema do
     field :jku, :string

@@ -1,11 +1,10 @@
-defmodule ExPixBRCode.Decoder do
+defmodule ExPixBRCode.BRCodes.Decoder do
   @moduledoc """
   Decode iodata that represent a BRCode.
   """
 
-  alias Ecto.Changeset
-
-  alias ExPixBRCode.Models.BRCode
+  alias ExPixBRCode.BRCodes.Models.BRCode
+  alias ExPixBRCode.Changesets
 
   @keys %{
     "00" => "payload_format_indicator",
@@ -134,17 +133,8 @@ defmodule ExPixBRCode.Decoder do
           {:ok, struct()} | {:error, term()}
   def decode_to(input, opts \\ [], schema \\ BRCode) do
     case decode(input, opts) do
-      {:ok, result} ->
-        schema
-        |> struct([])
-        |> schema.changeset(result)
-        |> case do
-          %{valid?: true} = c -> {:ok, Changeset.apply_changes(c)}
-          error -> {:error, {:validation, error}}
-        end
-
-      err ->
-        err
+      {:ok, result} -> Changesets.cast_and_apply(schema, result)
+      err -> err
     end
   end
 

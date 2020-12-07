@@ -1,12 +1,11 @@
-defmodule ExPixBRCode.Models.PixPayment do
+defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
   @moduledoc """
-  Payload of a PIX payment.
+  A dynamic immediate Pix payment.
 
-  Validations follow the specification by BACEN.
+  This payment structure is the result of loading it from a Pix endpoint.
   """
 
-  use Ecto.Schema
-  import Ecto.Changeset
+  use ExPixBRCode.ValueObject
 
   alias ExPixBRCode.Changesets
 
@@ -19,7 +18,6 @@ defmodule ExPixBRCode.Models.PixPayment do
   @valor_required [:original]
   @valor_optional []
 
-  @primary_key false
   embedded_schema do
     field :revisao, :integer
     field :chave, :string

@@ -1,8 +1,8 @@
-defmodule ExPixBRCode.Models.PixPaymentTest do
+defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPaymentTest do
   use ExUnit.Case, async: true
 
   alias ExPixBRCode.Changesets
-  alias ExPixBRCode.Models.PixPayment
+  alias ExPixBRCode.Payments.Models.DynamicImmediatePixPayment
 
   describe "changeset/2" do
     test "successfully validates a proper payload" do
@@ -22,7 +22,8 @@ defmodule ExPixBRCode.Models.PixPaymentTest do
         "valor" => %{"original" => "1.30"}
       }
 
-      assert {:ok, %PixPayment{}} = Changesets.cast_and_apply(PixPayment, payload)
+      assert {:ok, %DynamicImmediatePixPayment{}} =
+               Changesets.cast_and_apply(DynamicImmediatePixPayment, payload)
     end
 
     test "successfully validates a proper payload without optional fields" do
@@ -41,7 +42,8 @@ defmodule ExPixBRCode.Models.PixPaymentTest do
         "valor" => %{"original" => "1.30"}
       }
 
-      assert {:ok, %PixPayment{}} = Changesets.cast_and_apply(PixPayment, payload)
+      assert {:ok, %DynamicImmediatePixPayment{}} =
+               Changesets.cast_and_apply(DynamicImmediatePixPayment, payload)
     end
   end
 end

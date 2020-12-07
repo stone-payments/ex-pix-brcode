@@ -1,10 +1,9 @@
-defmodule ExPixBRCode.Models.BRCode do
+defmodule ExPixBRCode.BRCodes.Models.BRCode do
   @moduledoc """
   Schema for BRCode
   """
 
-  use Ecto.Schema
-  import Ecto.Changeset
+  use ExPixBRCode.ValueObject
 
   @required [
     :payload_format_indicator,
@@ -20,8 +19,6 @@ defmodule ExPixBRCode.Models.BRCode do
     :transaction_amount,
     :postal_code
   ]
-
-  @primary_key false
 
   embedded_schema do
     field :payload_format_indicator, :string, default: "01"
@@ -75,11 +72,14 @@ defmodule ExPixBRCode.Models.BRCode do
       required: true
     )
     |> validate_required(@required)
-    |> validate_inclusion(:payload_format_indicator, ["01"])
-    |> validate_inclusion(:point_of_initiation_method, ["12"])
+    |> validate_inclusion(:payload_format_indicator, ~w(01))
+    |> validate_inclusion(:point_of_initiation_method, ~w(11 12))
     |> validate_format(:merchant_category_code, ~r/^[0-9]{4}$/)
-    |> validate_inclusion(:transaction_currency, ["986"])
-    |> validate_inclusion(:country_code, ["BR"])
+    |> validate_inclusion(:transaction_currency, ~w(986))
+    |> validate_length(:transaction_amount, max: 13)
+    # Only "0" has special meaning. All other values must contain at least ONE "."
+    |> validate_format(:transaction_amount, ~r/(^0$)|(^[0-9]+\.[0-9]*$)/)
+    |> validate_inclusion(:country_code, ~w(BR))
     |> validate_length(:postal_code, is: 8)
     |> put_type()
   end
@@ -116,7 +116,7 @@ defmodule ExPixBRCode.Models.BRCode do
     model
     |> cast(params, [:reference_label])
     |> validate_required([:reference_label])
-    |> validate_length(:reference_label, min: 1, max: 25)
+    |> validate_format(:reference_label, ~r/(^[a-zA-Z0-9]{1,25}$)|(^\*\*\*$)/)
   end
 
   defp validate_per_type(%{valid?: false} = c), do: c

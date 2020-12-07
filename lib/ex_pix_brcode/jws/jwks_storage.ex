@@ -1,10 +1,10 @@
-defmodule ExPixBRCode.JWKSStorage do
+defmodule ExPixBRCode.JWS.JWKSStorage do
   @moduledoc """
   A JWKS storage of validated keys and certificates.
   """
 
-  alias ExPixBRCode.Models.JWKS.Key
-  alias ExPixBRCode.Models.JWSHeaders
+  alias ExPixBRCode.JWS.Models.JWKS.Key
+  alias ExPixBRCode.JWS.Models.JWSHeaders
 
   defstruct [:jwk, :certificate, :key]
 
@@ -19,6 +19,17 @@ defmodule ExPixBRCode.JWKSStorage do
           certificate: X509.Certificate.t(),
           key: Key.t()
         }
+
+  @doc """
+  Get the signer associated with the given 
+  """
+  @spec jwks_storage_by_jws_headers(JWSHeaders.t()) :: nil | __MODULE__.t()
+  def jwks_storage_by_jws_headers(headers) do
+    case :persistent_term.get(headers.jku, nil) do
+      nil -> nil
+      values -> Map.get(values, {headers.x5t, headers.kid})
+    end
+  end
 
   @doc """
   Process validation and storage of keys.
@@ -63,6 +74,7 @@ defmodule ExPixBRCode.JWKSStorage do
     end
   end
 
+  @doc false
   def validate_leaf_certificate(b64_cert, jku, x5t) do
     with {:ok, raw_der} <- Base.decode64(b64_cert),
          {:ok, certificate} <- X509.Certificate.from_der(raw_der),
@@ -129,16 +141,5 @@ defmodule ExPixBRCode.JWKSStorage do
     alg
     |> :crypto.hash(raw_cert)
     |> Base.url_encode64(padding: false)
-  end
-
-  @doc """
-  Get the signer associated with the given 
-  """
-  @spec jwks_storage_by_jws_headers(JWSHeaders.t()) :: nil | __MODULE__.t()
-  def jwks_storage_by_jws_headers(headers) do
-    case :persistent_term.get(headers.jku, nil) do
-      nil -> nil
-      values -> Map.get(values, {headers.x5t, headers.kid})
-    end
   end
 end

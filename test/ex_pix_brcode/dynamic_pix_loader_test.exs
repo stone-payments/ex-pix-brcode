@@ -1,9 +1,9 @@
 defmodule ExPixBRCode.DynamicPIXLoaderTest do
   use ExUnit.Case, async: true
 
-  alias ExPixBRCode.DynamicPIXLoader
-  alias ExPixBRCode.Models.PixPayment
-  alias ExPixBRCode.Models.PixPayment.{Calendario, Valor}
+  alias ExPixBRCode.Payments.DynamicPIXLoader
+  alias ExPixBRCode.Payments.Models.DynamicImmediatePixPayment
+  alias ExPixBRCode.Payments.Models.DynamicImmediatePixPayment.{Calendario, Valor}
 
   @client Tesla.client([], Tesla.Mock)
 
@@ -97,7 +97,7 @@ defmodule ExPixBRCode.DynamicPIXLoaderTest do
       end)
 
       assert {:ok,
-              %PixPayment{
+              %DynamicImmediatePixPayment{
                 calendario: %Calendario{
                   apresentacao: ~U[2020-11-28 03:15:39Z],
                   criacao: ~U[2020-11-13 23:59:49Z],
@@ -111,7 +111,7 @@ defmodule ExPixBRCode.DynamicPIXLoaderTest do
                 status: :ATIVA,
                 txid: "4DE46328260C11EB91C04049FC2CA371",
                 valor: %Valor{original: Decimal.new("1.00")}
-              }} == DynamicPIXLoader.load_pix(@client, pix_url) |> IO.inspect()
+              }} == DynamicPIXLoader.load_pix(@client, pix_url)
 
       x5t = ctx.jwks["keys"] |> hd() |> Map.get("x5t")
       kid = ctx.jwks["keys"] |> hd() |> Map.get("kid")

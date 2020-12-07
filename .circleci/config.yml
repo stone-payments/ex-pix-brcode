@@ -1,0 +1,40 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: hexpm/elixir:1.10.4-erlang-23.0.2-alpine-3.12.0
+    steps:
+      - run: apk add --update -qq alpine-sdk git openssh
+      - checkout
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - restore_cache:
+          keys:
+            - v1-dependency-cache-{{ checksum "mix.lock" }}
+            - v1-dependency-cache
+      - restore_cache:
+          keys:
+            - v1-build-cache-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+            - v1-build-cache-{{ .Branch }}
+            - v1-build-cache
+      - run: MIX_ENV=test mix deps.get
+      - save_cache:
+          key: v1-dependency-cache-{{ checksum "mix.lock" }}
+          paths: deps
+      - run: MIX_ENV=test mix quality.ci
+      - save_cache:
+          key: v1-build-cache-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
+          paths: _build
+      - store_test_results:
+          path: _build/test/lib/ex_pix_brcode
+
+workflows:
+  version: 2
+  test-and-publish:
+    jobs:
+      - test:
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              only: /.*/

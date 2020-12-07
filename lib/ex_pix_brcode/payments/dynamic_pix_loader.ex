@@ -1,24 +1,28 @@
-defmodule ExPixBRCode.DynamicPIXLoader do
+defmodule ExPixBRCode.Payments.DynamicPIXLoader do
   @moduledoc """
-  Load a `t:ExPixBRCode.Models.PixPayment` from a url.
+  Load either a :dynamic_payment_immediate or a :dynamic_payment_with_due_date from a url.
 
   Dynamic payments have a URL inside their text representation which we should use to 
   validate the certificate chain and signature and fill a PIXPayment model.
   """
 
-  alias ExPixBRCode.{Changesets, JWKSStorage}
-  alias ExPixBRCode.Models.{JWKS, JWSHeaders, PixPayment}
+  alias ExPixBRCode.Changesets
+  alias ExPixBRCode.JWS
+  alias ExPixBRCode.JWS.Models.{JWKS, JWSHeaders}
+  alias ExPixBRCode.Payments.Models.{DynamicImmediatePixPayment, DynamicPixPaymentWithDueDate}
 
   defguardp is_success(status) when status >= 200 and status < 300
 
   @doc """
   Given a `t:Tesla.Client` and a PIX payment URL it loads its details after validation.
   """
-  @spec load_pix(Tesla.Client.t(), String.t()) :: {:ok, PixPayment.t()} | {:error, atom()}
+  @spec load_pix(Tesla.Client.t(), String.t()) ::
+          {:ok, DynamicImmediatePixPayment.t() | DynamicPixPaymentWithDueDate.t()}
+          | {:error, atom()}
   def load_pix(client, url) do
     case Tesla.get(client, url) do
       {:ok, %{status: status} = env} when is_success(status) ->
-        do_process_jws(client, env.body)
+        do_process_jws(client, url, env.body)
 
       {:ok, _} ->
         {:error, :http_status_not_success}
@@ -28,7 +32,7 @@ defmodule ExPixBRCode.DynamicPIXLoader do
     end
   end
 
-  defp do_process_jws(client, jws) do
+  defp do_process_jws(client, url, jws) do
     with {:ok, header_claims} <- Joken.peek_header(jws),
          {:ok, header_claims} <- Changesets.cast_and_apply(JWSHeaders, header_claims),
          {:ok, jwks_storage} <- fetch_jwks_storage(client, header_claims),
@@ -36,8 +40,22 @@ defmodule ExPixBRCode.DynamicPIXLoader do
          :ok <- verify_alg(jwks_storage.jwk, header_claims.alg),
          {:ok, payload} <-
            Joken.verify(jws, build_signer(jwks_storage.jwk, header_claims.alg)),
-         {:ok, pix} <- Changesets.cast_and_apply(PixPayment, payload) do
+         type <- type_from_url(url),
+         {:ok, pix} <- Changesets.cast_and_apply(type, payload) do
       {:ok, pix}
+    end
+  end
+
+  defp type_from_url(url) do
+    url
+    |> URI.parse()
+    |> Map.get(:path)
+    |> Path.split()
+    |> Enum.member?("cobv")
+    |> if do
+      DynamicPixPaymentWithDueDate
+    else
+      DynamicImmediatePixPayment
     end
   end
 
@@ -75,7 +93,7 @@ defmodule ExPixBRCode.DynamicPIXLoader do
   end
 
   defp fetch_jwks_storage(client, header_claims) do
-    case JWKSStorage.jwks_storage_by_jws_headers(header_claims) do
+    case JWS.jwks_storage_by_jws_headers(header_claims) do
       nil ->
         try_fetching_signers(client, header_claims)
 
@@ -107,9 +125,9 @@ defmodule ExPixBRCode.DynamicPIXLoader do
 
   defp process_jwks(jwks, header_claims) when is_map(jwks) do
     with {:ok, jwks} <- Changesets.cast_and_apply(JWKS, jwks),
-         :ok <- JWKSStorage.process_keys(jwks.keys, header_claims.jku),
+         :ok <- JWS.process_keys(jwks.keys, header_claims.jku),
          storage_item when not is_nil(storage_item) <-
-           JWKSStorage.jwks_storage_by_jws_headers(header_claims) do
+           JWS.jwks_storage_by_jws_headers(header_claims) do
       {:ok, storage_item}
     else
       nil -> {:error, :key_not_found_in_jku}

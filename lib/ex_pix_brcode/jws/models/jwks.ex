@@ -1,10 +1,9 @@
-defmodule ExPixBRCode.Models.JWKS do
+defmodule ExPixBRCode.JWS.Models.JWKS do
   @moduledoc """
   A JWKS result following RFC https://tools.ietf.org/html/rfc7517
   """
 
-  use Ecto.Schema
-  import Ecto.Changeset
+  use ExPixBRCode.ValueObject
 
   @key_required [:kty, :kid, :x5t, :x5c, :key_ops]
   @key_optional [:use, :alg, :"x5t#S256", :x5u, :n, :e, :crv, :x, :y]
@@ -13,8 +12,6 @@ defmodule ExPixBRCode.Models.JWKS do
                   |> Keyword.get(:jws)
                   |> elem(1)
                   |> Enum.reject(&(String.starts_with?(&1, "HS") or &1 == "none"))
-
-  @primary_key false
 
   embedded_schema do
     embeds_many :keys, Key do
