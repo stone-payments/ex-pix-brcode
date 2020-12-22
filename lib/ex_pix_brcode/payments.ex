@@ -18,13 +18,15 @@ defmodule ExPixBRCode.Payments do
 
   It might use the `t:Tesla.Client` for dynamically loading it from PSPs.
   """
-  @spec from_brcode(Tesla.Client.t(), BRCode.t()) ::
+  @spec from_brcode(Tesla.Client.t(), BRCode.t(), Keyword.t()) ::
           {:ok,
            StaticPixPayment.t()
            | DynamicImmediatePixPayment.t()
            | DynamicPixPaymentWithDueDate.t()}
           | {:error, reason :: atom()}
-  def from_brcode(_client, %BRCode{type: :static} = brcode) do
+  def from_brcode(client, brcode, opts \\ [])
+
+  def from_brcode(_client, %BRCode{type: :static} = brcode, _opts) do
     with key_type when is_binary(key_type) <- key_type(brcode.merchant_account_information.chave) do
       {:ok,
        %StaticPixPayment{
@@ -37,9 +39,9 @@ defmodule ExPixBRCode.Payments do
     end
   end
 
-  def from_brcode(client, %BRCode{type: type} = brcode)
+  def from_brcode(client, %BRCode{type: type} = brcode, opts)
       when type in [:dynamic_payment_immediate, :dynamic_payment_with_due_date] do
-    DynamicPIXLoader.load_pix(client, "https://" <> brcode.merchant_account_information.url)
+    DynamicPIXLoader.load_pix(client, "https://" <> brcode.merchant_account_information.url, opts)
   end
 
   defp key_type(key) do
