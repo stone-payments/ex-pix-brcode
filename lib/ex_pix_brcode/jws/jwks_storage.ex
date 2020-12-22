@@ -43,25 +43,27 @@ defmodule ExPixBRCode.JWS.JWKSStorage do
 
   After successful validation, keys are inserted in a `:persistent_term`.
   """
-  @spec process_keys([Key.t()], jku :: String.t()) ::
+  @spec process_keys([Key.t()], jku :: String.t(), opts :: Keyword.t()) ::
           :ok
           | {:error,
              :key_thumbprint_and_first_certificate_differ
              | :key_from_first_certificate_differ
              | :invalid_certificate_encoding
              | :certificate_subject_and_jku_uri_authority_differs}
-  def process_keys(keys, jku) when is_list(keys) do
-    case Enum.reduce_while(keys, {:ok, []}, &validate_and_persist_key(&1, jku, &2)) do
+  def process_keys(keys, jku, opts) when is_list(keys) do
+    case Enum.reduce_while(keys, {:ok, []}, &validate_and_persist_key(&1, jku, &2, opts)) do
       {:ok, keys} -> :persistent_term.put(jku, Map.new(keys))
       {:error, _} = err -> err
     end
   end
 
-  defp validate_and_persist_key(%Key{x5c: [b64_cert | _] = chain} = key, jku, {:ok, acc}) do
+  defp validate_and_persist_key(%Key{x5c: [b64_cert | _] = chain} = key, jku, {:ok, acc}, opts) do
     key_from_params = key |> build_key_map() |> JOSE.JWK.from_map()
 
-    with {:ok, jwk} <- validate_certificate_chain(chain),
-         {:ok, certificate} <- validate_leaf_certificate(b64_cert, jku, key.x5t),
+    with {:ok, jwk} <- validate_certificate_chain(chain, key_from_params, opts),
+         {:ok, certificate, raw_der} <- get_certificate(b64_cert),
+         {:ok, certificate} <-
+           validate_leaf_certificate(certificate, raw_der, jku, key.x5t, opts),
          {:key_from_cert, true} <- {:key_from_cert, key_from_params == jwk} do
       storage_item = %__MODULE__{jwk: key_from_params, certificate: certificate, key: key}
 
@@ -74,26 +76,35 @@ defmodule ExPixBRCode.JWS.JWKSStorage do
     end
   end
 
-  @doc false
-  def validate_leaf_certificate(b64_cert, jku, x5t) do
+  defp get_certificate(b64_cert) do
     with {:ok, raw_der} <- Base.decode64(b64_cert),
-         {:ok, certificate} <- X509.Certificate.from_der(raw_der),
+         {:ok, certificate} <- X509.Certificate.from_der(raw_der) do
+      {:ok, certificate, raw_der}
+    end
+  end
+
+  @doc false
+  def validate_leaf_certificate(certificate, raw_der, jku, x5t, opts) do
+    with true <- Keyword.get(opts, :leaf_certificate_should_fail, true),
          :ok <- validate_cert_subject(certificate, jku),
          {:x5t, true} <- {:x5t, thumbprint(raw_der) == x5t} do
       {:ok, certificate}
     else
+      false -> {:ok, certificate}
       {:x5t, false} -> {:error, :key_thumbprint_and_leaf_certificate_differ}
       :error -> :error
       {:error, _} = err -> err
     end
   end
 
-  defp validate_certificate_chain(chain) do
-    with {:ok, [root | certificate_chain]} <- decode_chain(chain),
+  defp validate_certificate_chain(chain, key_from_params, opts) do
+    with true <- Keyword.get(opts, :x5c_should_fail, true),
+         {:ok, [root | certificate_chain]} <- decode_chain(chain),
          {:ok, {{_, pkey, _}, _}} <-
            :public_key.pkix_path_validation(root, certificate_chain, []) do
       {:ok, JOSE.JWK.from_key(pkey)}
     else
+      false -> {:ok, key_from_params}
       :error -> {:error, :invalid_cert_encoding}
       {:error, _} = err -> err
     end
