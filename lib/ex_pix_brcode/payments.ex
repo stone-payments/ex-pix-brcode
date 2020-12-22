@@ -25,14 +25,16 @@ defmodule ExPixBRCode.Payments do
            | DynamicPixPaymentWithDueDate.t()}
           | {:error, reason :: atom()}
   def from_brcode(_client, %BRCode{type: :static} = brcode) do
-    {:ok,
-     %StaticPixPayment{
-       key: brcode.merchant_account_information.chave,
-       key_type: key_type(brcode.merchant_account_information.chave),
-       additional_info: brcode.merchant_account_information.info_adicional,
-       transaction_amount: brcode.transaction_amount,
-       transaction_id: brcode.additional_data_field_template.reference_label
-     }}
+    with key_type when is_binary(key_type) <- key_type(brcode.merchant_account_information.chave) do
+      {:ok,
+       %StaticPixPayment{
+         key: brcode.merchant_account_information.chave,
+         key_type: key_type,
+         additional_info: brcode.merchant_account_information.info_adicional,
+         transaction_amount: brcode.transaction_amount,
+         transaction_id: brcode.additional_data_field_template.reference_label
+       }}
+    end
   end
 
   def from_brcode(client, %BRCode{type: type} = brcode)
@@ -46,6 +48,7 @@ defmodule ExPixBRCode.Payments do
       String.match?(key, ~r/^[0-9]{11}$/) -> "cpf"
       String.match?(key, ~r/^[0-9]{14}$/) -> "cnpj"
       Ecto.UUID.cast(key) != :error -> "random_key"
+      true -> {:error, :unknown_key_type}
     end
   end
 end

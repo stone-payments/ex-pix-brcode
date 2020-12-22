@@ -19,10 +19,10 @@ defmodule ExPixBRCode.Payments.DynamicPIXLoader do
   @spec load_pix(Tesla.Client.t(), String.t()) ::
           {:ok, DynamicImmediatePixPayment.t() | DynamicPixPaymentWithDueDate.t()}
           | {:error, atom()}
-  def load_pix(client, url) do
+  def load_pix(client, url, opts \\ []) do
     case Tesla.get(client, url) do
       {:ok, %{status: status} = env} when is_success(status) ->
-        do_process_jws(client, url, env.body)
+        do_process_jws(client, url, env.body, opts)
 
       {:ok, _} ->
         {:error, :http_status_not_success}
@@ -32,10 +32,10 @@ defmodule ExPixBRCode.Payments.DynamicPIXLoader do
     end
   end
 
-  defp do_process_jws(client, url, jws) do
+  defp do_process_jws(client, url, jws, opts) do
     with {:ok, header_claims} <- Joken.peek_header(jws),
          {:ok, header_claims} <- Changesets.cast_and_apply(JWSHeaders, header_claims),
-         {:ok, jwks_storage} <- fetch_jwks_storage(client, header_claims),
+         {:ok, jwks_storage} <- fetch_jwks_storage(client, header_claims, opts),
          :ok <- verify_certificate(jwks_storage.certificate),
          :ok <- verify_alg(jwks_storage.jwk, header_claims.alg),
          {:ok, payload} <-
@@ -92,20 +92,20 @@ defmodule ExPixBRCode.Payments.DynamicPIXLoader do
     end
   end
 
-  defp fetch_jwks_storage(client, header_claims) do
+  defp fetch_jwks_storage(client, header_claims, opts) do
     case JWS.jwks_storage_by_jws_headers(header_claims) do
       nil ->
-        try_fetching_signers(client, header_claims)
+        try_fetching_signers(client, header_claims, opts)
 
       storage_item ->
         {:ok, storage_item}
     end
   end
 
-  defp try_fetching_signers(client, header_claims) do
+  defp try_fetching_signers(client, header_claims, opts) do
     case Tesla.get(client, header_claims.jku) do
       {:ok, %{status: status} = env} when is_success(status) ->
-        process_jwks(env.body, header_claims)
+        process_jwks(env.body, header_claims, opts)
 
       {:ok, _} ->
         {:error, :http_status_not_success}
@@ -115,17 +115,17 @@ defmodule ExPixBRCode.Payments.DynamicPIXLoader do
     end
   end
 
-  defp process_jwks(jwks, header_claims) when is_binary(jwks) do
+  defp process_jwks(jwks, header_claims, opts) when is_binary(jwks) do
     case Jason.decode(jwks) do
-      {:ok, jwks} when is_map(jwks) -> process_jwks(jwks, header_claims)
+      {:ok, jwks} when is_map(jwks) -> process_jwks(jwks, header_claims, opts)
       {:error, _} = err -> err
       {:ok, _} -> {:error, :invalid_jwks_contents}
     end
   end
 
-  defp process_jwks(jwks, header_claims) when is_map(jwks) do
+  defp process_jwks(jwks, header_claims, opts) when is_map(jwks) do
     with {:ok, jwks} <- Changesets.cast_and_apply(JWKS, jwks),
-         :ok <- JWS.process_keys(jwks.keys, header_claims.jku),
+         :ok <- JWS.process_keys(jwks.keys, header_claims.jku, opts),
          storage_item when not is_nil(storage_item) <-
            JWS.jwks_storage_by_jws_headers(header_claims) do
       {:ok, storage_item}
