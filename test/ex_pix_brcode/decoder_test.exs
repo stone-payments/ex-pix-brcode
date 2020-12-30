@@ -244,5 +244,33 @@ defmodule ExPixBRCode.DecoderTest do
                   type: :dynamic_payment_immediate
                 }}
     end
+
+    test "succeeds with BRCode has free text on reference_label field" do
+      assert Decoder.decode_to(
+               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid52040000530398654031.55802BR5904CARL6010SAN.FIERRO62210517Lojinha da paixao6304D296"
+             ) ==
+               {:ok,
+                %BRCode{
+                  additional_data_field_template: %AdditionalDataField{
+                    reference_label: "Lojinha da paixao"
+                  },
+                  country_code: "BR",
+                  crc: "D296",
+                  merchant_account_information: %MerchantAccountInfo{
+                    chave: "11111111111",
+                    gui: "BR.GOV.BCB.PIX",
+                    info_adicional: nil,
+                    url: nil
+                  },
+                  merchant_category_code: "0000",
+                  merchant_city: "SAN.FIERRO",
+                  merchant_name: "CARL",
+                  payload_format_indicator: "01",
+                  point_of_initiation_method: nil,
+                  transaction_amount: "1.5",
+                  transaction_currency: "986",
+                  type: :static
+                }}
+    end
   end
 end
