@@ -100,13 +100,14 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
   defp validate_either_cpf_or_cnpj(changeset) do
     cpf = get_field(changeset, :cpf)
     cnpj = get_field(changeset, :cnpj)
+    name = get_field(changeset, :nome)
 
     cond do
-      is_nil(cpf) and is_nil(cnpj) ->
-        add_error(changeset, :devedor, "cpf or cnpj must be present")
-
       not is_nil(cpf) and not is_nil(cnpj) ->
-        add_error(changeset, :devedor, "Only one of cpf or cnpj must be present")
+        add_error(changeset, :devedor, "only one of cpf or cnpj must be present")
+
+      (not is_nil(cpf) or not is_nil(cnpj)) and is_nil(name) ->
+        add_error(changeset, :devedor, "when either cpf or cnpj is present so must be 'nome'")
 
       not is_nil(cpf) ->
         Changesets.validate_document(changeset, :cpf)

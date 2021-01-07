@@ -272,7 +272,7 @@ defmodule ExPixBRCode.DecoderTest do
                   type: :static
                 }}
     end
-
+    
     test "succeds with BRCode has transaction_amount with '10'" do
       assert Decoder.decode_to(
                "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid5204000053039865402105802BR5904CARL6010SAN.FIERRO62210517Lojinha da paixao63043525"
@@ -328,7 +328,5 @@ defmodule ExPixBRCode.DecoderTest do
                   type: :static
                 }}
     end
-
-
   end
 end
