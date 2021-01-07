@@ -247,7 +247,7 @@ defmodule ExPixBRCode.DecoderTest do
 
     test "succeeds with BRCode has free text on reference_label field" do
       assert Decoder.decode_to(
-               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid52040000530398654031.55802BR5904CARL6010SAN.FIERRO62210517Lojinha da paixao6304D296"
+               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid52040000530398654031005802BR5904CARL6010SAN.FIERRO62210517Lojinha da paixao63045982"
              ) ==
                {:ok,
                 %BRCode{
@@ -255,7 +255,7 @@ defmodule ExPixBRCode.DecoderTest do
                     reference_label: "Lojinha da paixao"
                   },
                   country_code: "BR",
-                  crc: "D296",
+                  crc: "5982",
                   merchant_account_information: %MerchantAccountInfo{
                     chave: "11111111111",
                     gui: "BR.GOV.BCB.PIX",
@@ -267,10 +267,68 @@ defmodule ExPixBRCode.DecoderTest do
                   merchant_name: "CARL",
                   payload_format_indicator: "01",
                   point_of_initiation_method: nil,
-                  transaction_amount: "1.5",
+                  transaction_amount: "100",
                   transaction_currency: "986",
                   type: :static
                 }}
     end
+
+    test "succeds with BRCode has transaction_amount with '10'" do
+      assert Decoder.decode_to(
+               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid5204000053039865402105802BR5904CARL6010SAN.FIERRO62210517Lojinha da paixao63043525"
+             ) ==
+               {:ok,
+                %BRCode{
+                  additional_data_field_template: %AdditionalDataField{
+                    reference_label: "Lojinha da paixao"
+                  },
+                  country_code: "BR",
+                  crc: "3525",
+                  merchant_account_information: %MerchantAccountInfo{
+                    chave: "11111111111",
+                    gui: "BR.GOV.BCB.PIX",
+                    info_adicional: nil,
+                    url: nil
+                  },
+                  merchant_category_code: "0000",
+                  merchant_city: "SAN.FIERRO",
+                  merchant_name: "CARL",
+                  payload_format_indicator: "01",
+                  point_of_initiation_method: nil,
+                  transaction_amount: "10",
+                  transaction_currency: "986",
+                  type: :static
+                }}
+    end
+
+    test "succeds with BRCode has transaction_amount with '10.'" do
+      assert Decoder.decode_to(
+               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid520400005303986540310.5802BR5904CARL6010SAN.FIERRO62210517Lojinha da paixao63040468"
+             ) ==
+               {:ok,
+                %BRCode{
+                  additional_data_field_template: %AdditionalDataField{
+                    reference_label: "Lojinha da paixao"
+                  },
+                  country_code: "BR",
+                  crc: "0468",
+                  merchant_account_information: %MerchantAccountInfo{
+                    chave: "11111111111",
+                    gui: "BR.GOV.BCB.PIX",
+                    info_adicional: nil,
+                    url: nil
+                  },
+                  merchant_category_code: "0000",
+                  merchant_city: "SAN.FIERRO",
+                  merchant_name: "CARL",
+                  payload_format_indicator: "01",
+                  point_of_initiation_method: nil,
+                  transaction_amount: "10.",
+                  transaction_currency: "986",
+                  type: :static
+                }}
+    end
+
+
   end
 end
