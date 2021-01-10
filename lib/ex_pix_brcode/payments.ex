@@ -46,9 +46,10 @@ defmodule ExPixBRCode.Payments do
 
   defp key_type(key) do
     cond do
-      String.match?(key, ~r/^\+55[0-9]{11}$/) -> "phone"
       String.match?(key, ~r/^[0-9]{11}$/) -> "cpf"
       String.match?(key, ~r/^[0-9]{14}$/) -> "cnpj"
+      String.match?(key, ~r/^\+55[0-9]{11}$/) -> "phone"
+      String.match?(key, ~r/@/) -> "email"
       Ecto.UUID.cast(key) != :error -> "random_key"
       true -> {:error, :unknown_key_type}
     end
