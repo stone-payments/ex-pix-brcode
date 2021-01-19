@@ -1,7 +1,7 @@
-defmodule ExPixBRCode.DynamicPIXLoaderTest do
+defmodule ExPixBRCode.Payments.DynamicPixLoaderTest do
   use ExUnit.Case, async: true
 
-  alias ExPixBRCode.Payments.DynamicPIXLoader
+  alias ExPixBRCode.Payments.DynamicPixLoader
   alias ExPixBRCode.Payments.Models.DynamicImmediatePixPayment
   alias ExPixBRCode.Payments.Models.DynamicImmediatePixPayment.{Calendario, Valor}
 
@@ -83,12 +83,12 @@ defmodule ExPixBRCode.DynamicPIXLoaderTest do
 
   describe "load_pix/2" do
     for key_type <- [
-      :cpf,
-      :cnpj,
-      :phone,
-      :email,
-      :random_key
-    ] do
+          :cpf,
+          :cnpj,
+          :phone,
+          :email,
+          :random_key
+        ] do
       test "succeeds for payment with #{key_type} key", %{jku: jku} = ctx do
         payment = build_pix_payment() |> with_key(unquote(key_type))
         pix_url = "https://somepixpsp.br/pix/v2/#{Ecto.UUID.generate()}"
@@ -118,7 +118,7 @@ defmodule ExPixBRCode.DynamicPIXLoaderTest do
                   status: :ATIVA,
                   txid: "4DE46328260C11EB91C04049FC2CA371",
                   valor: %Valor{original: Decimal.new("1.00")}
-                }} == DynamicPIXLoader.load_pix(@client, pix_url)
+                }} == DynamicPixLoader.load_pix(@client, pix_url)
 
         x5t = ctx.jwks["keys"] |> hd() |> Map.get("x5t")
         kid = ctx.jwks["keys"] |> hd() |> Map.get("kid")
@@ -161,7 +161,7 @@ defmodule ExPixBRCode.DynamicPIXLoaderTest do
                 txid: "4DE46328260C11EB91C04049FC2CA371",
                 valor: %Valor{original: Decimal.new("1.00")}
               }} ==
-               DynamicPIXLoader.load_pix(@client, pix_url,
+               DynamicPixLoader.load_pix(@client, pix_url,
                  leaf_certificate_should_fail: false,
                  x5c_should_fail: false
                )

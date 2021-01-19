@@ -5,7 +5,7 @@ defmodule ExPixBRCode.Payments do
 
   alias ExPixBRCode.BRCodes.Models.BRCode
 
-  alias ExPixBRCode.Payments.DynamicPIXLoader
+  alias ExPixBRCode.Payments.DynamicPixLoader
 
   alias ExPixBRCode.Payments.Models.{
     DynamicImmediatePixPayment,
@@ -32,7 +32,7 @@ defmodule ExPixBRCode.Payments do
        %StaticPixPayment{
          key: brcode.merchant_account_information.chave,
          key_type: key_type,
-         additional_info: brcode.merchant_account_information.info_adicional,
+         additional_information: brcode.merchant_account_information.info_adicional,
          transaction_amount: brcode.transaction_amount,
          transaction_id: brcode.additional_data_field_template.reference_label
        }}
@@ -41,7 +41,7 @@ defmodule ExPixBRCode.Payments do
 
   def from_brcode(client, %BRCode{type: type} = brcode, opts)
       when type in [:dynamic_payment_immediate, :dynamic_payment_with_due_date] do
-    DynamicPIXLoader.load_pix(client, "https://" <> brcode.merchant_account_information.url, opts)
+    DynamicPixLoader.load_pix(client, "https://" <> brcode.merchant_account_information.url, opts)
   end
 
   defp key_type(key) do

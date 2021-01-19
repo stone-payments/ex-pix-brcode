@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Pix.LoadDynamic do
 
   use Mix.Task
 
-  alias ExPixBRCode.Payments.DynamicPIXLoader
+  alias ExPixBRCode.Payments.DynamicPixLoader
 
   @client Tesla.client(
             [],
@@ -23,7 +23,7 @@ defmodule Mix.Tasks.Pix.LoadDynamic do
   def run([url | _]) do
     Mix.Tasks.App.Start.run([])
 
-    case DynamicPIXLoader.load_pix(@client, url) do
+    case DynamicPixLoader.load_pix(@client, url) do
       {:ok, payment} ->
         Mix.shell().info("""
         Loaded payment:
