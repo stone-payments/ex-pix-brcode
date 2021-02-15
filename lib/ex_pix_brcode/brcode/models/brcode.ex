@@ -172,5 +172,5 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
   end
 
   defp validate_pix_path(changeset, ["/" | path]) when length(path) > 1, do: changeset
-  defp validate_pix_path(changeset, _), do: add_error(changeset, :url, "Invalid PIX path")
+  defp validate_pix_path(changeset, _), do: add_error(changeset, :url, "Invalid Pix path")
 end

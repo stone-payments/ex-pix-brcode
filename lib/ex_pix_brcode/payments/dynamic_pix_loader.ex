@@ -1,9 +1,9 @@
-defmodule ExPixBRCode.Payments.DynamicPIXLoader do
+defmodule ExPixBRCode.Payments.DynamicPixLoader do
   @moduledoc """
   Load either a :dynamic_payment_immediate or a :dynamic_payment_with_due_date from a url.
 
-  Dynamic payments have a URL inside their text representation which we should use to 
-  validate the certificate chain and signature and fill a PIXPayment model.
+  Dynamic payments have a URL inside their text representation which we should use to
+  validate the certificate chain and signature and fill a Pix payment model.
   """
 
   alias ExPixBRCode.Changesets

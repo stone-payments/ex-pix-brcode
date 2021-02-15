@@ -2,20 +2,20 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPayment do
   @moduledoc """
   A static Pix payment model.
 
-  Static payments are those meant to be used many times. Normally a merchant will print a QRCode to 
-  a sign and direct his/her customers to scan it. It MUST contain AT LEAST the DICT key for the 
+  Static payments are those meant to be used many times. Normally a merchant will print a QRCode to
+  a sign and direct his/her customers to scan it. It MUST contain AT LEAST the DICT key for the
   target account.
   """
 
   use ExPixBRCode.ValueObject
 
   @required [:key]
-  @optional [:transaction_amount, :transaction_id, :additional_info]
+  @optional [:transaction_amount, :transaction_id, :additional_information]
 
   embedded_schema do
     field :key, :string
     field :key_type, :string
-    field :additional_info, :string
+    field :additional_information, :string
     field :transaction_amount, :string
     field :transaction_id, :string
   end
