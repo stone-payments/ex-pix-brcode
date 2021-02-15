@@ -63,7 +63,7 @@ defmodule ExPixBRCode.Changesets do
   'chave' and 'infoAdicional' validation.
 
   These fields have the following rules:
-    - 
+    -
   """
   def validate_chave_and_info_adicional_length(%{valid?: false} = c, _, _, _), do: c
 

@@ -301,9 +301,9 @@ defmodule ExPixBRCode.DecoderTest do
                 }}
     end
 
-    test "succeds with BRCode has transaction_amount with '10.'" do
+    test "succeds with BRCode has transaction_amount with '0.9'" do
       assert Decoder.decode_to(
-               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid520400005303986540310.5802BR5904CARL6010SAN.FIERRO62210517Lojinha da paixao63040468"
+               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid52040000530398654030.95802BR5904CARL6010SAN.FIERRO62210517Lojinha da paixao6304EEF7"
              ) ==
                {:ok,
                 %BRCode{
@@ -311,7 +311,7 @@ defmodule ExPixBRCode.DecoderTest do
                     reference_label: "Lojinha da paixao"
                   },
                   country_code: "BR",
-                  crc: "0468",
+                  crc: "EEF7",
                   merchant_account_information: %MerchantAccountInfo{
                     chave: "11111111111",
                     gui: "BR.GOV.BCB.PIX",
@@ -323,7 +323,7 @@ defmodule ExPixBRCode.DecoderTest do
                   merchant_name: "CARL",
                   payload_format_indicator: "01",
                   point_of_initiation_method: nil,
-                  transaction_amount: "10.",
+                  transaction_amount: "0.9",
                   transaction_currency: "986",
                   type: :static
                 }}
