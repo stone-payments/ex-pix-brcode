@@ -77,11 +77,8 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
     |> validate_format(:merchant_category_code, ~r/^[0-9]{4}$/)
     |> validate_inclusion(:transaction_currency, ~w(986))
     |> validate_length(:transaction_amount, max: 13)
-    # Formats accept: "0", "0.10", ".10", "1.", "1", "123.99", "123456789.23"
-    |> validate_format(
-      :transaction_amount,
-      ~r/(^0$)|(^[0-9]+\.[0-9]{2}$)|(^[1-9]{1}([0-9])*(\.)?$)|(^\.[0-9]{2}$)/
-    )
+    # Formats accept: "0", "0.10", ".10", "1.", "1", "123.9","123.99", "123456789.23"
+    |> validate_format(:transaction_amount, ~r/^0$|^[0-9]+\.[0-9]{2}$|^[0-9]+\.[0-9]{1}$|^[1-9]{1}[0-9]*\.?$|^\.[0-9]{2}$/)
     |> validate_inclusion(:country_code, ~w(BR))
     |> validate_length(:postal_code, is: 8)
     |> put_type()
