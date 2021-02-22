@@ -1,7 +1,7 @@
-defmodule ExPixBRCode.DynamicPIXLoaderTest do
+defmodule ExPixBRCode.Payments.DynamicPixLoaderTest do
   use ExUnit.Case, async: true
 
-  alias ExPixBRCode.Payments.DynamicPIXLoader
+  alias ExPixBRCode.Payments.DynamicPixLoader
   alias ExPixBRCode.Payments.Models.DynamicImmediatePixPayment
   alias ExPixBRCode.Payments.Models.DynamicImmediatePixPayment.{Calendario, Valor}
 
@@ -82,41 +82,49 @@ defmodule ExPixBRCode.DynamicPIXLoaderTest do
   end
 
   describe "load_pix/2" do
-    test "succeeds with example payment", %{jku: jku} = ctx do
-      payment = build_pix_payment()
-      pix_url = "https://somepixpsp.br/pix/v2/#{Ecto.UUID.generate()}"
+    for key_type <- [
+          :cpf,
+          :cnpj,
+          :phone,
+          :email,
+          :random_key
+        ] do
+      test "succeeds for payment with #{key_type} key", %{jku: jku} = ctx do
+        payment = build_pix_payment() |> with_key(unquote(key_type))
+        pix_url = "https://somepixpsp.br/pix/v2/#{Ecto.UUID.generate()}"
 
-      Tesla.Mock.mock(fn
-        %{url: ^pix_url} ->
-          %{}
-          |> Joken.generate_and_sign!(payment, ctx.signer)
-          |> Tesla.Mock.text(headers: [{"content-type", "application/jose"}])
+        Tesla.Mock.mock(fn
+          %{url: ^pix_url} ->
+            %{}
+            |> Joken.generate_and_sign!(payment, ctx.signer)
+            |> Tesla.Mock.text(headers: [{"content-type", "application/jose"}])
 
-        %{url: ^jku} ->
-          Tesla.Mock.json(ctx.jwks)
-      end)
+          %{url: ^jku} ->
+            Tesla.Mock.json(ctx.jwks)
+        end)
 
-      assert {:ok,
-              %DynamicImmediatePixPayment{
-                calendario: %Calendario{
-                  apresentacao: ~U[2020-11-28 03:15:39Z],
-                  criacao: ~U[2020-11-13 23:59:49Z],
-                  expiracao: 86400
-                },
-                chave: "14413050762",
-                devedor: nil,
-                infoAdicionais: [],
-                revisao: 0,
-                solicitacaoPagador: nil,
-                status: :ATIVA,
-                txid: "4DE46328260C11EB91C04049FC2CA371",
-                valor: %Valor{original: Decimal.new("1.00")}
-              }} == DynamicPIXLoader.load_pix(@client, pix_url)
+        assert {:ok,
+                %DynamicImmediatePixPayment{
+                  calendario: %Calendario{
+                    apresentacao: ~U[2020-11-28 03:15:39Z],
+                    criacao: ~U[2020-11-13 23:59:49Z],
+                    expiracao: 86400
+                  },
+                  chave: payment.chave,
+                  devedor: nil,
+                  infoAdicionais: [],
+                  revisao: 0,
+                  solicitacaoPagador: nil,
+                  status: :ATIVA,
+                  txid: "4DE46328260C11EB91C04049FC2CA371",
+                  valor: %Valor{original: Decimal.new("1.00")}
+                }} == DynamicPixLoader.load_pix(@client, pix_url)
 
-      x5t = ctx.jwks["keys"] |> hd() |> Map.get("x5t")
-      kid = ctx.jwks["keys"] |> hd() |> Map.get("kid")
-      key = {x5t, kid}
-      assert %{^key => _} = :persistent_term.get(ctx.jku)
+        x5t = ctx.jwks["keys"] |> hd() |> Map.get("x5t")
+        kid = ctx.jwks["keys"] |> hd() |> Map.get("kid")
+        key = {x5t, kid}
+        assert %{^key => _} = :persistent_term.get(ctx.jku)
+      end
     end
 
     test "can skip certifica validations", %{jku: jku} = ctx do
@@ -153,7 +161,7 @@ defmodule ExPixBRCode.DynamicPIXLoaderTest do
                 txid: "4DE46328260C11EB91C04049FC2CA371",
                 valor: %Valor{original: Decimal.new("1.00")}
               }} ==
-               DynamicPIXLoader.load_pix(@client, pix_url,
+               DynamicPixLoader.load_pix(@client, pix_url,
                  leaf_certificate_should_fail: false,
                  x5c_should_fail: false
                )
@@ -182,4 +190,10 @@ defmodule ExPixBRCode.DynamicPIXLoaderTest do
       valor: %{original: "1.00"}
     }
   end
+
+  defp with_key(payment, :cpf), do: %{payment | chave: Brcpfcnpj.cpf_generate()}
+  defp with_key(payment, :cnpj), do: %{payment | chave: Brcpfcnpj.cnpj_generate()}
+  defp with_key(payment, :phone), do: %{payment | chave: "+5521987676565"}
+  defp with_key(payment, :email), do: %{payment | chave: "some@email.com"}
+  defp with_key(payment, :random_key), do: %{payment | chave: Ecto.UUID.generate()}
 end

@@ -259,7 +259,7 @@ defmodule ExPixBRCode.DecoderTest do
                   merchant_account_information: %MerchantAccountInfo{
                     chave: "11111111111",
                     gui: "BR.GOV.BCB.PIX",
-                    info_adicional: nil,
+                    info_adicional: "Vacina covid",
                     url: nil
                   },
                   merchant_category_code: "0000",
@@ -287,7 +287,7 @@ defmodule ExPixBRCode.DecoderTest do
                   merchant_account_information: %MerchantAccountInfo{
                     chave: "11111111111",
                     gui: "BR.GOV.BCB.PIX",
-                    info_adicional: nil,
+                    info_adicional: "Vacina covid",
                     url: nil
                   },
                   merchant_category_code: "0000",
@@ -315,7 +315,7 @@ defmodule ExPixBRCode.DecoderTest do
                   merchant_account_information: %MerchantAccountInfo{
                     chave: "11111111111",
                     gui: "BR.GOV.BCB.PIX",
-                    info_adicional: nil,
+                    info_adicional: "Vacina covid",
                     url: nil
                   },
                   merchant_category_code: "0000",
@@ -328,5 +328,34 @@ defmodule ExPixBRCode.DecoderTest do
                   type: :static
                 }}
     end
+
+    test "succeds with BRCode has transaction_amount with '0.9'" do
+      assert Decoder.decode_to(
+               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid52040000530398654030.95802BR5904CARL6010SAN.FIERRO62210517Lojinha da paixao6304EEF7"
+             ) ==
+               {:ok,
+                %BRCode{
+                  additional_data_field_template: %AdditionalDataField{
+                    reference_label: "Lojinha da paixao"
+                  },
+                  country_code: "BR",
+                  crc: "EEF7",
+                  merchant_account_information: %MerchantAccountInfo{
+                    chave: "11111111111",
+                    gui: "BR.GOV.BCB.PIX",
+                    info_adicional: "Vacina covid",
+                    url: nil
+                  },
+                  merchant_category_code: "0000",
+                  merchant_city: "SAN.FIERRO",
+                  merchant_name: "CARL",
+                  payload_format_indicator: "01",
+                  point_of_initiation_method: nil,
+                  transaction_amount: "0.9",
+                  transaction_currency: "986",
+                  type: :static
+                }}
+    end
+
   end
 end

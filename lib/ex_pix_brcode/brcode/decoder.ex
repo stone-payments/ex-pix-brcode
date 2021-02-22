@@ -14,6 +14,7 @@ defmodule ExPixBRCode.BRCodes.Decoder do
        %{
          "00" => "gui",
          "01" => "chave",
+         "02" => "info_adicional",
          "25" => "url"
        }},
     "52" => "merchant_category_code",
@@ -29,7 +30,7 @@ defmodule ExPixBRCode.BRCodes.Decoder do
   }
 
   @doc """
-  Decode input into a map with string keys with known keys for Brocade.
+  Decode input into a map with string keys with known keys for BRCode.
 
   There is no actual validation about the values. If you want to coerce values and validate see
   `decode_to/3` function.

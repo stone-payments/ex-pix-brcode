@@ -19,14 +19,14 @@ Para a leitura de um BRCode basta:
      "merchant_name" => "Fulano de Tal",
      "payload_format_indicator" => "01",
      "transaction_currency" => "986"
-   }} = ExPixBRCode.Decoder.decode(brcode)
+   }} = ExPixBRCode.BRCodes.decode(brcode)
 ```
 
 Ou fazendo o cast para um `Ecto.Schema`:
 
 ``` elixir
-alias ExPixBRCode.Models.BRCode
-alias ExPixBRCode.Models.BRCode.{AdditionalDataField, MerchantAccountInfo}
+alias ExPixBRCode.BRCodes.Models.BRCode
+alias ExPixBRCode.BRCodes.Models.BRCode.{AdditionalDataField, MerchantAccountInfo}
 
 {:ok,
  %BRCode{
@@ -49,16 +49,19 @@ alias ExPixBRCode.Models.BRCode.{AdditionalDataField, MerchantAccountInfo}
    transaction_amount: nil,
    transaction_currency: "986",
    type: :static
- }} = ExPixBRCode.Decoder.decode_to(brcode)
+ }} = ExPixBRCode.BRCodes.decode_to(brcode)
 ```
 
 Após o decode, caso o type seja de algum Pix dinâmico, é necessário carregar os dados do JWS. Para isso, basta:
 
 ``` elixir
-ExPixBRCode.DynamicPixLoader.load_pix(client, url) |> IO.inspect()
+alias ExPixBRCode.Payments.Models.PixPayment
+alias ExPixBRCode.Payments.Models.PixPayment.{Calendario, Valor}
+
+ExPixBRCode.Payments.DynamicPixLoader.load_pix(client, url) |> IO.inspect()
 {:ok,
- %ExPixBRCode.Models.PixPayment{
-   calendario: %ExPixBRCode.Models.PixPayment.Calendario{
+ %PixPayment{
+   calendario: %Calendario{
      apresentacao: ~U[2020-11-28 03:15:39Z],
      criacao: ~U[2020-11-13 23:59:49Z],
      expiracao: 86400
@@ -70,8 +73,8 @@ ExPixBRCode.DynamicPixLoader.load_pix(client, url) |> IO.inspect()
    solicitacaoPagador: nil,
    status: :ATIVA,
    txid: "4DE46328260C11EB91C04049FC2CA371",
-   valor: %ExPixBRCode.Models.PixPayment.Valor{original: #Decimal<1.00>}
- }} 
+   valor: %Valor{original: #Decimal<1.00>}
+ }}
 ```
 
 Nesse caso há dois parâmetros: uma instância de `Tesla.Client` e a URL do Pix que deve retornar um JWS válido.
@@ -103,4 +106,3 @@ end
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/ex_pix_brcode](https://hexdocs.pm/ex_pix_brcode).
-
