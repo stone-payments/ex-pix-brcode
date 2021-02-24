@@ -14,9 +14,15 @@ defmodule ExPixBRCode.Payments do
   }
 
   @doc """
-  Turn a `t:ExPixBRCode.Models.BRCode` into a payment representation according to its type.
+  Turn a `t:ExPixBRCode.Models.BRCode` into a payment representation according
+  to its type.
 
   It might use the `t:Tesla.Client` for dynamically loading it from PSPs.
+
+  For `t:ExPixBRCode.Models.BRCode` with `:dynamic_payment_with_due_date` type
+  the city code and the payment date must be passed through the opts argument.
+  In this situation, the city code must be the value of :cod_mun key and the
+  payment date must be the value of :dpp key.
   """
   @spec from_brcode(Tesla.Client.t(), BRCode.t(), Keyword.t()) ::
           {:ok,
@@ -39,10 +45,17 @@ defmodule ExPixBRCode.Payments do
     end
   end
 
-  def from_brcode(client, %BRCode{type: type} = brcode, opts)
-      when type in [:dynamic_payment_immediate, :dynamic_payment_with_due_date] do
+  def from_brcode(client, %BRCode{type: :dynamic_payment_immediate} = brcode, opts) do
     DynamicPixLoader.load_pix(client, "https://" <> brcode.merchant_account_information.url, opts)
   end
+
+  def from_brcode(client, %BRCode{type: :dynamic_payment_with_due_date} = brcode, opts) do
+    cod_mun = Keyword.fetch!(opts, :cod_mun)
+    dpp = Keyword.fetch!(opts, :dpp)
+    DynamicPixLoader.load_pix(client, "https://#{brcode.merchant_account_information.url}?codMun=#{cod_mun}&DPP=#{dpp}", opts)
+  end
+
+
 
   defp key_type(key) do
     cond do
