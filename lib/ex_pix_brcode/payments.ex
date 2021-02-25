@@ -66,10 +66,16 @@ defmodule ExPixBRCode.Payments do
     end
   end
 
-  defp dynamic_payment_with_due_date_url(brcode, cod_mun: cod_mun, dpp: dpp)
-       when is_binary(cod_mun) and is_binary(dpp),
-       do: "https://#{brcode.merchant_account_information.url}?codMun=#{cod_mun}&DPP=#{dpp}"
+  defp dynamic_payment_with_due_date_url(brcode, opts) do
+    cod_mun = Keyword.get(opts, :cod_mun)
+    dpp = Keyword.get(opts, :dpp)
 
-  defp dynamic_payment_with_due_date_url(brcode, cod_mun: _, dpp: _),
-    do: "https://#{brcode.merchant_account_information.url}"
+    cond do
+      not is_nil(cod_mun) and not is_nil(dpp) ->
+        "https://#{brcode.merchant_account_information.url}?codMun=#{cod_mun}&DPP=#{dpp}"
+
+      true ->
+        "https://#{brcode.merchant_account_information.url}"
+    end
+  end
 end
