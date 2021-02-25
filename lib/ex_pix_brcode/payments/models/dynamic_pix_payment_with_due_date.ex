@@ -22,23 +22,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicPixPaymentWithDueDate do
   @recebedor_one_of [:cpf, :cnpj]
 
   @valor_required [:final]
-  @valor_optional [:original]
-
-  @abatimento_required [:modalidade, :valorPerc]
-
-  @abatimento_modalidades [1, 2]
-
-  @desconto_required [:modalidade]
-  @desconto_optional [:valorPerc]
-
-  @desconto_modalidades [1, 2, 3, 4, 5, 6]
-
-  @juros_required [:modalidade, :valorPerc]
-
-  @juros_modalidades [1, 2, 3, 4, 5, 6, 7, 8]
-
-  @multa_required [:modalidade, :valorPerc]
-  @multa_modalidades [1, 2]
+  @valor_optional [:original, :abatimento, :desconto, :juros, :multa]
 
   embedded_schema do
     field :revisao, :integer
@@ -65,33 +49,10 @@ defmodule ExPixBRCode.Payments.Models.DynamicPixPaymentWithDueDate do
 
     embeds_one :valor, Valor, primary_key: false do
       field :original, :decimal
-
-      embeds_one :abatimento, Abatimento, primary_key: false do
-        field :modalidade, :integer
-        field :valorPerc, :decimal
-      end
-
-      embeds_one :desconto, Desconto, primary_key: false do
-        field :modalidade, :integer
-
-        embeds_many :descontoDataFixa, DescontoDataFixa, primary_key: false do
-          field :valorPerc, :decimal
-          field :data, :date
-        end
-
-        field :valorPerc, :decimal
-      end
-
-      embeds_one :juros, Juros, primary_key: false do
-        field :modalidade, :integer
-        field :valorPerc, :decimal
-      end
-
-      embeds_one :multa, Multa, primary_key: false do
-        field :modalidade, :integer
-        field :valorPerc, :decimal
-      end
-
+      field :abatimento, :decimal
+      field :desconto, :decimal
+      field :juros, :decimal
+      field :multa, :decimal
       field :final, :decimal
     end
 
@@ -218,67 +179,9 @@ defmodule ExPixBRCode.Payments.Models.DynamicPixPaymentWithDueDate do
     model
     |> cast(params, @valor_required ++ @valor_optional)
     |> validate_required(@valor_required)
-    |> cast_embed(:abatimento, with: &abatimento_changeset/2)
-    |> cast_embed(:desconto, with: &desconto_changeset/2)
-    |> cast_embed(:juros, with: &juros_changeset/2)
-    |> cast_embed(:multa, with: &multa_changeset/2)
-  end
-
-  defp abatimento_changeset(model, params) do
-    model
-    |> cast(params, @abatimento_required)
-    |> validate_required(@abatimento_required)
-    |> validate_inclusion(:modalidade, @abatimento_modalidades)
-    |> validate_number(:valorPerc, greater_than: 0)
-  end
-
-  defp desconto_changeset(model, params) do
-    model
-    |> cast(params, @desconto_required ++ @desconto_optional)
-    |> validate_required(@desconto_required)
-    |> validate_inclusion(:modalidade, @desconto_modalidades)
-    |> validate_either_desconto_data_fixa_or_valor_perc()
-  end
-
-  defp validate_either_desconto_data_fixa_or_valor_perc(changeset) do
-    desconto_modalidade = get_field(changeset, :modalidade)
-
-    fixed_value_or_proportinal_value_until_informed_date = [1, 2]
-
-    cond do
-      desconto_modalidade in fixed_value_or_proportinal_value_until_informed_date ->
-        changeset
-        |> cast_embed(:descontoDataFixa, with: &desconto_data_fixa_changeset/2)
-        |> validate_length(:descontoDataFixa,
-          greater_than_or_equal_to: 1,
-          less_than_or_equal_to: 3
-        )
-
-      true ->
-        validate_number(changeset, :valorPerc, greater_than: 0)
-    end
-  end
-
-  def desconto_data_fixa_changeset(model, params) do
-    model
-    |> cast(params, [:valorPerc, :data])
-    |> validate_required([:valorPerc, :data])
-    |> validate_number(:valorPerc, greater_than: 0)
-  end
-
-  defp juros_changeset(model, params) do
-    model
-    |> cast(params, @juros_required)
-    |> validate_required(@juros_required)
-    |> validate_inclusion(:modalidade, @juros_modalidades)
-    |> validate_number(:valorPerc, greater_than: 0)
-  end
-
-  defp multa_changeset(model, params) do
-    model
-    |> cast(params, @multa_required)
-    |> validate_required(@multa_required)
-    |> validate_inclusion(:modalidade, @multa_modalidades)
-    |> validate_number(:valorPerc, greater_than: 0)
+    |> validate_number(:abatimento, greater_than: 0)
+    |> validate_number(:desconto, greater_than: 0)
+    |> validate_number(:juros, greater_than: 0)
+    |> validate_number(:multa, greater_than: 0)
   end
 end
