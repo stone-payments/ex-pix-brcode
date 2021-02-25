@@ -50,9 +50,9 @@ defmodule ExPixBRCode.Payments do
   end
 
   def from_brcode(client, %BRCode{type: :dynamic_payment_with_due_date} = brcode, opts) do
-    url = dynamic_payment_with_due_date_url(brcode, opts)
+    opts_with_query_params = query_params_from_opts(opts)
 
-    DynamicPixLoader.load_pix(client, url, opts)
+    DynamicPixLoader.load_pix(client, "https://" <> brcode.merchant_account_information.url, opts_with_query_params)
   end
 
   defp key_type(key) do
@@ -66,16 +66,18 @@ defmodule ExPixBRCode.Payments do
     end
   end
 
-  defp dynamic_payment_with_due_date_url(brcode, opts) do
-    cod_mun = Keyword.get(opts, :cod_mun)
-    dpp = Keyword.get(opts, :dpp)
+  defp query_params_from_opts(opts) do
+    valid_query_params = [:DDP, :codMun]
 
-    cond do
-      not is_nil(cod_mun) and not is_nil(dpp) ->
-        "https://#{brcode.merchant_account_information.url}?codMun=#{cod_mun}&DPP=#{dpp}"
+    query_params = opts
+    |> Enum.reject(fn {opt, value} -> is_nil(value) end)
+    |> Enum.map(fn
+      {:cod_mun, value} -> {:codMun, value}
+      {:dpp, value} -> {:DDP, value}
+      {opt, value} -> {opt, value}
+    end)
+    |> Enum.reject(fn {opt, value} -> not opt in valid_query_params end)
 
-      true ->
-        "https://#{brcode.merchant_account_information.url}"
-    end
+    Keyword.put_new(opts, :query_params, query_params)
   end
 end
