@@ -50,14 +50,9 @@ defmodule ExPixBRCode.Payments do
   end
 
   def from_brcode(client, %BRCode{type: :dynamic_payment_with_due_date} = brcode, opts) do
-    cod_mun = Keyword.fetch!(opts, :cod_mun)
-    dpp = Keyword.fetch!(opts, :dpp)
+    url = dynamic_payment_with_due_date_url(brcode, opts)
 
-    DynamicPixLoader.load_pix(
-      client,
-      "https://#{brcode.merchant_account_information.url}?codMun=#{cod_mun}&DPP=#{dpp}",
-      opts
-    )
+    DynamicPixLoader.load_pix(client, url, opts)
   end
 
   defp key_type(key) do
@@ -70,4 +65,11 @@ defmodule ExPixBRCode.Payments do
       true -> {:error, :unknown_key_type}
     end
   end
+
+  defp dynamic_payment_with_due_date_url(brcode, cod_mun: cod_mun, dpp: dpp)
+       when is_binary(cod_mun) and is_binary(dpp),
+       do: "https://#{brcode.merchant_account_information.url}?codMun=#{cod_mun}&DPP=#{dpp}"
+
+  defp dynamic_payment_with_due_date_url(brcode, cod_mun: _, dpp: _),
+    do: "https://#{brcode.merchant_account_information.url}"
 end
