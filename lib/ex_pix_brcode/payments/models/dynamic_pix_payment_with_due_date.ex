@@ -244,6 +244,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicPixPaymentWithDueDate do
     desconto_modalidade = get_field(changeset, :modalidade)
 
     fixed_value_or_proportinal_value_until_informed_date = [1, 2]
+
     cond do
       desconto_modalidade in fixed_value_or_proportinal_value_until_informed_date ->
         changeset

@@ -32,7 +32,8 @@ defmodule Mix.Tasks.Pix.ReadBrcode do
   def run([brcode | args]) do
     Mix.Tasks.App.Start.run([])
 
-    with {:parsed_args, {args, [], []}} <- {:parsed_args, OptionParser.parse(args, strict: @acceptable_args)},
+    with {:parsed_args, {args, [], []}} <-
+           {:parsed_args, OptionParser.parse(args, strict: @acceptable_args)},
          {:ok, opts} <- build_from_code_opts(args),
          {:ok, brcode} <- BRCodes.decode_to(brcode),
          {:ok, payment} <- Payments.from_brcode(@client, brcode, opts) do
