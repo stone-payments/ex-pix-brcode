@@ -52,10 +52,13 @@ defmodule ExPixBRCode.Payments do
   def from_brcode(client, %BRCode{type: :dynamic_payment_with_due_date} = brcode, opts) do
     cod_mun = Keyword.fetch!(opts, :cod_mun)
     dpp = Keyword.fetch!(opts, :dpp)
-    DynamicPixLoader.load_pix(client, "https://#{brcode.merchant_account_information.url}?codMun=#{cod_mun}&DPP=#{dpp}", opts)
+
+    DynamicPixLoader.load_pix(
+      client,
+      "https://#{brcode.merchant_account_information.url}?codMun=#{cod_mun}&DPP=#{dpp}",
+      opts
+    )
   end
-
-
 
   defp key_type(key) do
     cond do
