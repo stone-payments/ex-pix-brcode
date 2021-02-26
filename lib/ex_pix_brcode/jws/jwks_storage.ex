@@ -27,9 +27,15 @@ defmodule ExPixBRCode.JWS.JWKSStorage do
   def jwks_storage_by_jws_headers(headers) do
     case :persistent_term.get(headers.jku, nil) do
       nil -> nil
-      values -> Map.get(values, {headers.x5t, headers.kid})
+      values -> get_key(values, headers)
     end
   end
+
+  defp get_key(values, %{x5t: thumb, kid: kid}) when is_binary(thumb),
+    do: Map.get(values, {thumb, kid})
+
+  defp get_key(values, %{:"x5t#S256" => thumb, :kid => kid}) when is_binary(thumb),
+    do: Map.get(values, {thumb, kid})
 
   @doc """
   Process validation and storage of keys.
@@ -63,12 +69,16 @@ defmodule ExPixBRCode.JWS.JWKSStorage do
     with {:ok, jwk} <- validate_certificate_chain(chain, key_from_params, opts),
          {:ok, certificate, raw_der} <- get_certificate(b64_cert),
          {:ok, certificate} <-
-           validate_leaf_certificate(certificate, raw_der, jku, key.x5t, opts),
+           validate_leaf_certificate(certificate, raw_der, jku, key, opts),
          {:key_from_cert, true} <- {:key_from_cert, key_from_params == jwk} do
       storage_item = %__MODULE__{jwk: key_from_params, certificate: certificate, key: key}
 
-      key = {key.x5t, key.kid}
-      {:cont, {:ok, [{key, storage_item} | acc]}}
+      keys =
+        [Map.get(key, :x5t), Map.get(key, :"x5t#S256")]
+        |> Enum.reject(&is_nil/1)
+        |> Enum.map(&{{&1, key.kid}, storage_item})
+
+      {:cont, {:ok, keys ++ acc}}
     else
       {:key_from_cert, false} -> {:halt, {:error, :key_from_leaf_certificate_differ}}
       {:error, _} = err -> {:halt, err}
@@ -84,10 +94,10 @@ defmodule ExPixBRCode.JWS.JWKSStorage do
   end
 
   @doc false
-  def validate_leaf_certificate(certificate, raw_der, jku, x5t, opts) do
+  def validate_leaf_certificate(certificate, raw_der, jku, key, opts) do
     with true <- Keyword.get(opts, :leaf_certificate_should_fail, true),
          :ok <- validate_cert_subject(certificate, jku),
-         {:x5t, true} <- {:x5t, thumbprint(raw_der) == x5t} do
+         {:x5t, true} <- validate_thumbprint(raw_der, key) do
       {:ok, certificate}
     else
       false -> {:ok, certificate}
@@ -96,6 +106,12 @@ defmodule ExPixBRCode.JWS.JWKSStorage do
       {:error, _} = err -> err
     end
   end
+
+  defp validate_thumbprint(raw_der, %{x5t: thumb}) when is_binary(thumb),
+    do: {:x5t, thumbprint(raw_der) == thumb}
+
+  defp validate_thumbprint(raw_der, %{:"x5t#S256" => thumb}) when is_binary(thumb),
+    do: {:x5t, thumbprint(raw_der, :sha256) == thumb}
 
   defp validate_certificate_chain(chain, key_from_params, opts) do
     with true <- Keyword.get(opts, :x5c_should_fail, true),
