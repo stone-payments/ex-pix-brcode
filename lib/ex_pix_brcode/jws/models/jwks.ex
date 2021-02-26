@@ -5,8 +5,8 @@ defmodule ExPixBRCode.JWS.Models.JWKS do
 
   use ExPixBRCode.ValueObject
 
-  @key_required [:kty, :kid, :x5t, :x5c, :key_ops]
-  @key_optional [:use, :alg, :"x5t#S256", :x5u, :n, :e, :crv, :x, :y]
+  @key_required [:kty, :kid, :x5c, :key_ops]
+  @key_optional [:use, :alg, :x5t, :"x5t#S256", :x5u, :n, :e, :crv, :x, :y]
 
   @supported_algs JOSE.JWA.supports()
                   |> Keyword.get(:jws)
@@ -47,11 +47,25 @@ defmodule ExPixBRCode.JWS.Models.JWKS do
     model
     |> cast(params, @key_required ++ @key_optional)
     |> validate_required(@key_required)
+    |> validate_at_least_one_thumbprint()
     |> validate_inclusion(:alg, @supported_algs)
     |> validate_inclusion(:kty, ["EC", "RSA"])
     |> validate_subset(:key_ops, ["verify"])
     |> validate_length(:x5c, min: 1)
     |> validate_per_kty()
+  end
+
+  defp validate_at_least_one_thumbprint(%{valid?: false} = c), do: c
+
+  defp validate_at_least_one_thumbprint(changeset) do
+    x5t = get_field(changeset, :x5t)
+    x5tS256 = get_field(changeset, :"x5t#S256")
+
+    if is_nil(x5t) and is_nil(x5tS256) do
+      add_error(changeset, :thumbprint, "Missing either `x5t` or `x5t#S256`")
+    else
+      changeset
+    end
   end
 
   defp validate_per_kty(%{valid?: false} = c), do: c
