@@ -13,6 +13,8 @@ defmodule ExPixBRCode.Payments do
     StaticPixPayment
   }
 
+  @valid_query_params [:DDP, :codMun]
+
   @doc """
   Turn a `t:ExPixBRCode.Models.BRCode` into a payment representation according
   to its type.
@@ -67,16 +69,12 @@ defmodule ExPixBRCode.Payments do
   end
 
   defp query_params_from_opts(opts) do
-    valid_query_params = [:DDP, :codMun]
-
     query_params = opts
-    |> Enum.reject(fn {_opt, value} -> is_nil(value) end)
+    |> Enum.filter(fn {opt, value} -> opt in @valid_query_params and not is_nil(value) end)
     |> Enum.map(fn
       {:cod_mun, value} -> {:codMun, value}
       {:dpp, value} -> {:DDP, value}
-      {opt, value} -> {opt, value}
     end)
-    |> Enum.reject(fn {opt, _value} -> opt not in valid_query_params end)
 
     Keyword.put_new(opts, :query_params, query_params)
   end
