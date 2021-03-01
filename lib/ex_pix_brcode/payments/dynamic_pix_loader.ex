@@ -35,7 +35,8 @@ defmodule ExPixBRCode.Payments.DynamicPixLoader do
 
   defp do_process_jws(client, url, jws, opts) do
     with {:ok, header_claims} <- Joken.peek_header(jws),
-         {:ok, header_claims} <- Changesets.cast_and_apply(JWSHeaders, header_claims),
+         {:ok, header_claims} <-
+           Changesets.cast_and_apply(JWSHeaders, header_claims),
          {:ok, jwks_storage} <- fetch_jwks_storage(client, header_claims, opts),
          :ok <- verify_certificate(jwks_storage.certificate),
          :ok <- verify_alg(jwks_storage.jwk, header_claims.alg),
