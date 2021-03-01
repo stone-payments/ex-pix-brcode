@@ -70,13 +70,13 @@ defmodule ExPixBRCode.Payments do
     valid_query_params = [:DDP, :codMun]
 
     query_params = opts
-    |> Enum.reject(fn {opt, value} -> is_nil(value) end)
+    |> Enum.reject(fn {_opt, value} -> is_nil(value) end)
     |> Enum.map(fn
       {:cod_mun, value} -> {:codMun, value}
       {:dpp, value} -> {:DDP, value}
       {opt, value} -> {opt, value}
     end)
-    |> Enum.reject(fn {opt, value} -> not opt in valid_query_params end)
+    |> Enum.reject(fn {opt, _value} -> opt not in valid_query_params end)
 
     Keyword.put_new(opts, :query_params, query_params)
   end
