@@ -21,7 +21,7 @@ defmodule ExPixBRCode.Payments.DynamicPixLoader do
           | {:error, atom()}
   def load_pix(client, url, opts \\ []) do
     query_params = Keyword.get(opts, :query_params, [])
-    case Tesla.get(client, url, query_params: query_params) do
+    case Tesla.get(client, url, query: query_params) do
       {:ok, %{status: status} = env} when is_success(status) ->
         do_process_jws(client, url, env.body, opts)
 
