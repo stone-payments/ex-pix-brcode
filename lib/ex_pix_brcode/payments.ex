@@ -13,7 +13,7 @@ defmodule ExPixBRCode.Payments do
     StaticPixPayment
   }
 
-  @valid_query_params [:DDP, :codMun]
+  @valid_query_params [:cod_mun, :dpp]
 
   @doc """
   Turn a `t:ExPixBRCode.Models.BRCode` into a payment representation according
