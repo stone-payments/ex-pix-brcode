@@ -11,6 +11,8 @@ defmodule ExPixBRCode.Payments.DynamicPixLoader do
   alias ExPixBRCode.JWS.Models.{JWKS, JWSHeaders}
   alias ExPixBRCode.Payments.Models.{DynamicImmediatePixPayment, DynamicPixPaymentWithDueDate}
 
+  @valid_query_params [:cod_mun, :dpp]
+
   defguardp is_success(status) when status >= 200 and status < 300
 
   @doc """
@@ -20,7 +22,8 @@ defmodule ExPixBRCode.Payments.DynamicPixLoader do
           {:ok, DynamicImmediatePixPayment.t() | DynamicPixPaymentWithDueDate.t()}
           | {:error, atom()}
   def load_pix(client, url, opts \\ []) do
-    query_params = Keyword.get(opts, :query_params, [])
+    query_params = extract_query_params(opts)
+
     case Tesla.get(client, url, query: query_params) do
       {:ok, %{status: status} = env} when is_success(status) ->
         do_process_jws(client, url, env.body, opts)
@@ -135,5 +138,15 @@ defmodule ExPixBRCode.Payments.DynamicPixLoader do
       nil -> {:error, :key_not_found_in_jku}
       err -> err
     end
+  end
+
+  defp extract_query_params(opts) do
+    opts
+    |> Enum.filter(fn {opt, value} -> opt in @valid_query_params and not is_nil(value) end)
+    |> Enum.map(fn
+      {:cod_mun, value} -> {:codMun, value}
+      {:dpp, value} -> {:DDP, value}
+      opt -> opt
+    end)
   end
 end

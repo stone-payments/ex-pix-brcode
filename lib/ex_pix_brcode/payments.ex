@@ -13,8 +13,6 @@ defmodule ExPixBRCode.Payments do
     StaticPixPayment
   }
 
-  @valid_query_params [:cod_mun, :dpp]
-
   @doc """
   Turn a `t:ExPixBRCode.Models.BRCode` into a payment representation according
   to its type.
@@ -47,14 +45,9 @@ defmodule ExPixBRCode.Payments do
     end
   end
 
-  def from_brcode(client, %BRCode{type: :dynamic_payment_immediate} = brcode, opts) do
+  def from_brcode(client, %BRCode{type: type} = brcode, opts)
+      when type in [:dynamic_payment_immediate, :dynamic_payment_with_due_date] do
     DynamicPixLoader.load_pix(client, "https://" <> brcode.merchant_account_information.url, opts)
-  end
-
-  def from_brcode(client, %BRCode{type: :dynamic_payment_with_due_date} = brcode, opts) do
-    opts_with_query_params = query_params_from_opts(opts)
-
-    DynamicPixLoader.load_pix(client, "https://" <> brcode.merchant_account_information.url, opts_with_query_params)
   end
 
   defp key_type(key) do
@@ -66,16 +59,5 @@ defmodule ExPixBRCode.Payments do
       Ecto.UUID.cast(key) != :error -> "random_key"
       true -> {:error, :unknown_key_type}
     end
-  end
-
-  defp query_params_from_opts(opts) do
-    query_params = opts
-    |> Enum.filter(fn {opt, value} -> opt in @valid_query_params and not is_nil(value) end)
-    |> Enum.map(fn
-      {:cod_mun, value} -> {:codMun, value}
-      {:dpp, value} -> {:DDP, value}
-    end)
-
-    Keyword.put_new(opts, :query_params, query_params)
   end
 end
