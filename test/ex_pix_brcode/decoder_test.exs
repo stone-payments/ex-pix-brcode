@@ -356,6 +356,5 @@ defmodule ExPixBRCode.DecoderTest do
                   type: :static
                 }}
     end
-
   end
 end
