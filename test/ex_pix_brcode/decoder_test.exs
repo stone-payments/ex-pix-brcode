@@ -356,5 +356,33 @@ defmodule ExPixBRCode.DecoderTest do
                   type: :static
                 }}
     end
+
+    test "succeeds on BRCode type identification with dynamic_payment_with_due_date type" do
+      assert Decoder.decode_to(
+               "00020126990014br.gov.bcb.pix2577qr-h.sandbox.pix.bcb.gov.br/rest/api/v2/cobv/9b95a87c10a84d65bcbf55a48a2e50c85204000053039865802BR5903Pix6008BRASILIA62070503***63048ECF"
+             ) == {
+                :ok,
+                %BRCode{
+                  additional_data_field_template: %AdditionalDataField{reference_label: "***"},
+                  country_code: "BR",
+                  crc: "8ECF",
+                  merchant_account_information: %MerchantAccountInfo{
+                    chave: nil,
+                    gui: "br.gov.bcb.pix",
+                    info_adicional: nil,
+                    url: "qr-h.sandbox.pix.bcb.gov.br/rest/api/v2/cobv/9b95a87c10a84d65bcbf55a48a2e50c8"
+                  },
+                  merchant_category_code: "0000",
+                  merchant_city: "BRASILIA",
+                  merchant_name: "Pix",
+                  payload_format_indicator: "01",
+                  point_of_initiation_method: nil,
+                  postal_code: nil,
+                  transaction_amount: nil,
+                  transaction_currency: "986",
+                  type: :dynamic_payment_with_due_date
+                }
+              }
+    end
   end
 end

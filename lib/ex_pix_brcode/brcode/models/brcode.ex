@@ -93,7 +93,7 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
       not is_nil(mai.chave) ->
         put_change(changeset, :type, :static)
 
-      not is_nil(mai.url) and String.ends_with?(String.downcase(mai.url), "/cobv") ->
+      not is_nil(mai.url) and Regex.match?(~r/cobv/, String.downcase(mai.url)) ->
         put_change(changeset, :type, :dynamic_payment_with_due_date)
 
       not is_nil(mai.url) ->
