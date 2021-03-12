@@ -86,7 +86,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicPixPaymentWithDueDate do
     model
     |> cast(coalesce_params(params), @required ++ @optional)
     |> validate_required(@required)
-    |> validate_length(:txid, min: 26, max: 35)
+    |> validate_length(:txid, max: 35)
     |> validate_length(:solicitacaoPagador, max: 140)
     |> validate_number(:revisao, greater_than_or_equal_to: 0)
     |> cast_embed(:calendario, required: true, with: &calendario_changeset/2)
