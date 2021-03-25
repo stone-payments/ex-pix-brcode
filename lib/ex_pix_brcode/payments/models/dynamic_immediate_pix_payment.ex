@@ -60,7 +60,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
     |> cast_embed(:valor, with: &valor_changeset/2, required: true)
     |> cast_embed(:infoAdicionais, with: &info_adicionais_changeset/2)
     |> validate_number(:revisao, greater_than_or_equal_to: 0)
-    |> validate_length(:txid, min: 26, max: 35)
+    |> validate_length(:txid, max: 35)
     |> validate_length(:solicitacaoPagador, max: 140)
   end
 
