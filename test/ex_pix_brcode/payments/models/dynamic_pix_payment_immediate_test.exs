@@ -87,6 +87,5 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPaymentTest do
       assert {:ok, %DynamicImmediatePixPayment{}} =
                Changesets.cast_and_apply(DynamicImmediatePixPayment, payload)
     end
-
   end
 end

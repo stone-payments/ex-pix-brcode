@@ -76,7 +76,8 @@ defmodule ExPixBRCode.BRCodes.Decoder do
               | {:unknown_key, String.t()}}
              | :unknown_error
              | :invalid_crc
-             | :invalid_input_length}
+             | :invalid_input_length
+             | :invalid_input_size}
 
   def decode(input, opts \\ []) do
     brcode = IO.iodata_to_binary(input)
