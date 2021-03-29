@@ -20,6 +20,8 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
     :postal_code
   ]
 
+  @alphanumeric_special_format ~r/^[\x20-\x7E]+$/
+
   embedded_schema do
     field :payload_format_indicator, :string, default: "01"
     field :point_of_initiation_method, :string
@@ -84,6 +86,10 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
     )
     |> validate_inclusion(:country_code, ~w(BR))
     |> validate_length(:postal_code, is: 8)
+    |> validate_length(:merchant_name, max: 25)
+    |> validate_format(:merchant_name, @alphanumeric_special_format)
+    |> validate_length(:merchant_city, max: 15)
+    |> validate_format(:merchant_city, @alphanumeric_special_format)
     |> put_type()
   end
 
@@ -120,6 +126,14 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
     |> cast(params, [:reference_label])
     |> validate_required([:reference_label])
     |> validate_length(:reference_label, min: 1, max: 25)
+    |> validate_reference_label_format()
+  end
+
+  defp validate_reference_label_format(changeset) do
+    case get_field(changeset, :reference_label) do
+      "***" -> validate_format(changeset, :reference_label, @alphanumeric_special_format)
+      _ -> validate_format(changeset, :reference_label, ~r/^[a-zA-Z0-9]+$/)
+    end
   end
 
   defp validate_per_type(%{valid?: false} = c), do: c

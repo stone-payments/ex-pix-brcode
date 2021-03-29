@@ -28,5 +28,16 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPayment do
     |> validate_length(:transaction_amount, max: 13)
     |> validate_format(:transaction_amount, ~r/(^0$)|(^[0-9]+\.[0-9]*$)/)
     |> validate_format(:transaction_id, ~r/^[a-zA-Z0-9]{1,25}$/)
+    |> validate_random_key_format()
+  end
+
+  defp validate_random_key_format(changeset) do
+    key_type = get_field(changeset, :key_type)
+
+    if key_type == "random_key" do
+      validate_format(changeset, :key, ~r/a-z0-9-/)
+    else
+      changeset
+    end
   end
 end
