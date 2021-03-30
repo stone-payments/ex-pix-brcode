@@ -1,6 +1,9 @@
 defmodule ExPixBRCode.BRCodes.Models.BRCode do
   @moduledoc """
-  Schema for BRCode
+  Schema for BRCode representation.
+
+  For a better understating of the EMV®-QRCPS fields specification, used by BRCode, is recommended
+  to consult [EMV® QR Code Specification for Payment Systems (EMV® QRCPS) Merchant-Presented Mode](https://www.emvco.com/emv-technologies/qrcodes/)
   """
 
   use ExPixBRCode.ValueObject
