@@ -103,17 +103,6 @@ defmodule ExPixBRCode.BRCodes.Decoder do
 
   def extract_crc(_binary), do: {:error, :invalid_input_length}
 
-  def extract_and_calculated_crc(binary) do
-    {:ok, {val, _}} = extract_crc(binary)
-
-    crc = val
-    |> CRC.ccitt_16()
-    |> Integer.to_string(16)
-    |> String.pad_leading(4, "0")
-    {crc, val <> crc}
-  end
-
-
   defp validate_crc(contents, received_crc) do
     calculated_crc =
       contents

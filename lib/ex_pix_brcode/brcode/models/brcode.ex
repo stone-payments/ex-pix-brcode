@@ -131,7 +131,7 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
 
   defp validate_reference_label_format(changeset) do
     case get_field(changeset, :reference_label) do
-      "***" -> validate_format(changeset, :reference_label, @alphanumeric_special_format)
+      "***" -> changeset
       _ -> validate_format(changeset, :reference_label, ~r/^[a-zA-Z0-9]+$/)
     end
   end

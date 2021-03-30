@@ -10,7 +10,7 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPayment do
   use ExPixBRCode.ValueObject
 
   @required [:key]
-  @optional [:transaction_amount, :transaction_id, :additional_information]
+  @optional [:transaction_amount, :transaction_id, :additional_information, :key_type]
 
   embedded_schema do
     field :key, :string
@@ -32,10 +32,9 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPayment do
   end
 
   defp validate_random_key_format(changeset) do
-    key_type = get_field(changeset, :key_type)
-
+    key_type = get_change(changeset, :key_type)
     if key_type == "random_key" do
-      validate_format(changeset, :key, ~r/a-z0-9-/)
+      validate_format(changeset, :key, ~r/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}/)
     else
       changeset
     end

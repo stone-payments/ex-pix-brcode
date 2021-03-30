@@ -1,4 +1,4 @@
-defmodule ExPixBRCode.Payments.Models.StaticPixPaymentTest do
+defmodule ExPixBRCode.PaymentTest do
   use ExUnit.Case, async: true
 
   alias ExPixBRCode.BRCodes.Decoder
