@@ -85,7 +85,7 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
     # Formats accept: "0", "0.10", ".10", "1.", "1", "123.9","123.99", "123456789.23"
     |> validate_format(
       :transaction_amount,
-      ~r/^0$|^[0-9]+\.[0-9]{2}$|^[0-9]+\.[0-9]{1}$|^[1-9]{1}[0-9]*\.?$|^\.[0-9]{2}$/
+      ~r/^[0-9]+\.[0-9]{2}$|^[0-9]+\.[0-9]{1}$|^[1-9]{1}[0-9]*\.?$|^\.[0-9]{2}$/
     )
     |> validate_inclusion(:country_code, ~w(BR))
     |> validate_length(:postal_code, is: 8)
