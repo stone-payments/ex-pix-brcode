@@ -404,5 +404,10 @@ defmodule ExPixBRCode.DecoderTest do
       assert {:error, {:validation, changeset}} = Decoder.decode_to("00020104141234567890123426580014BR.GOV.BCB.PIX0136123e4567-e12b-12d1-a456-42665544000027300012BR.COM.OUTRO011001234567895204000053039865406123.455802BR5917NOME DO RECEBEDOR6008BRASILIA610870074900622005161234567890👀1234580390012BR.COM.OUTRO01190123.ABCD.3456.WXYZ630475EF")
       assert [reference_label: {"has invalid format", [validation: :format]}] = changeset.changes.additional_data_field_template.errors
     end
+
+    test "Ssucceeds on validate invalid format for reference_label BRCode field" do
+      assert {:error, {:validation, changeset}} = Decoder.decode_to("00020126990014br.gov.bcb.pix2577https://qr-h.sandbox.pix.bcb.gov.br/rest/api/v2/ac8ab4efe7db4200885f5ab3c34725204000053039865802BR5903Pix6008BRASILIA62070503***63041043")
+      assert [url: {"URL with protocol", []}] == changeset.changes.merchant_account_information.errors
+    end
   end
 end
