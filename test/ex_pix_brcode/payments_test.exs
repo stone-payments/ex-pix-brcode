@@ -1,4 +1,4 @@
-defmodule ExPixBRCode.Payments.Models.StaticPixPaymentTest do
+defmodule ExPixBRCode.PaymentTest do
   use ExUnit.Case, async: true
 
   alias ExPixBRCode.BRCodes.Decoder
@@ -47,15 +47,15 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPaymentTest do
     test "successfully cast static payment with optional fields" do
       assert {:ok, brcode} =
                Decoder.decode_to(
-                 "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid52040000530398654031005802BR5904CARL6010SAN.FIERRO62210517Lojinha da paixao63045982"
+                 "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid52040000530398654031005802BR5904CARL6010SAN.FIERRO62070503aB16304AE0E"
                )
 
       assert brcode == %BRCode{
                additional_data_field_template: %BRCode.AdditionalDataField{
-                 reference_label: "Lojinha da paixao"
+                 reference_label: "aB1"
                },
                country_code: "BR",
-               crc: "5982",
+               crc: "AE0E",
                merchant_account_information: %BRCode.MerchantAccountInfo{
                  chave: "11111111111",
                  gui: "BR.GOV.BCB.PIX",
@@ -79,7 +79,7 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPaymentTest do
                 key: "11111111111",
                 key_type: "cpf",
                 transaction_amount: "100",
-                transaction_id: "Lojinha da paixao"
+                transaction_id: "aB1"
               }} == Payments.from_brcode(nil, brcode)
     end
   end

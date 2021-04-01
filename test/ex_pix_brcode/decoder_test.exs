@@ -247,15 +247,15 @@ defmodule ExPixBRCode.DecoderTest do
 
     test "succeeds with BRCode has free text on reference_label field" do
       assert Decoder.decode_to(
-               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid52040000530398654031005802BR5904CARL6010SAN.FIERRO62210517Lojinha da paixao63045982"
+               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid52040000530398654031005802BR5904CARL6010SAN.FIERRO62100506b4b4c46304040C"
              ) ==
                {:ok,
                 %BRCode{
                   additional_data_field_template: %AdditionalDataField{
-                    reference_label: "Lojinha da paixao"
+                    reference_label: "b4b4c4"
                   },
                   country_code: "BR",
-                  crc: "5982",
+                  crc: "040C",
                   merchant_account_information: %MerchantAccountInfo{
                     chave: "11111111111",
                     gui: "BR.GOV.BCB.PIX",
@@ -275,15 +275,15 @@ defmodule ExPixBRCode.DecoderTest do
 
     test "succeds with BRCode has transaction_amount with '10'" do
       assert Decoder.decode_to(
-               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid5204000053039865402105802BR5904CARL6010SAN.FIERRO62210517Lojinha da paixao63043525"
+        "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid5204000053039865402105802BR5904CARL6010SAN.FIERRO62090505o1ab46304970D"
              ) ==
                {:ok,
                 %BRCode{
                   additional_data_field_template: %AdditionalDataField{
-                    reference_label: "Lojinha da paixao"
+                    reference_label: "o1ab4"
                   },
                   country_code: "BR",
-                  crc: "3525",
+                  crc: "970D",
                   merchant_account_information: %MerchantAccountInfo{
                     chave: "11111111111",
                     gui: "BR.GOV.BCB.PIX",
@@ -303,15 +303,15 @@ defmodule ExPixBRCode.DecoderTest do
 
     test "succeds with BRCode has transaction_amount with '10.'" do
       assert Decoder.decode_to(
-               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid520400005303986540310.5802BR5904CARL6010SAN.FIERRO62210517Lojinha da paixao63040468"
+               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid520400005303986540310.5802BR5904CARL6010SAN.FIERRO62100506b4b4c463049878"
              ) ==
                {:ok,
                 %BRCode{
                   additional_data_field_template: %AdditionalDataField{
-                    reference_label: "Lojinha da paixao"
+                    reference_label: "b4b4c4"
                   },
                   country_code: "BR",
-                  crc: "0468",
+                  crc: "9878",
                   merchant_account_information: %MerchantAccountInfo{
                     chave: "11111111111",
                     gui: "BR.GOV.BCB.PIX",
@@ -331,15 +331,15 @@ defmodule ExPixBRCode.DecoderTest do
 
     test "succeds with BRCode has transaction_amount with '0.9'" do
       assert Decoder.decode_to(
-               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid52040000530398654030.95802BR5904CARL6010SAN.FIERRO62210517Lojinha da paixao6304EEF7"
+        "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid52040000530398654030.95802BR5904CARL6010SAN.FIERRO62100506b4b4c463044D69"
              ) ==
                {:ok,
                 %BRCode{
                   additional_data_field_template: %AdditionalDataField{
-                    reference_label: "Lojinha da paixao"
+                    reference_label: "b4b4c4"
                   },
                   country_code: "BR",
-                  crc: "EEF7",
+                  crc: "4D69",
                   merchant_account_information: %MerchantAccountInfo{
                     chave: "11111111111",
                     gui: "BR.GOV.BCB.PIX",
@@ -361,28 +361,53 @@ defmodule ExPixBRCode.DecoderTest do
       assert Decoder.decode_to(
                "00020126990014br.gov.bcb.pix2577qr-h.sandbox.pix.bcb.gov.br/rest/api/v2/cobv/9b95a87c10a84d65bcbf55a48a2e50c85204000053039865802BR5903Pix6008BRASILIA62070503***63048ECF"
              ) == {
-                :ok,
-                %BRCode{
-                  additional_data_field_template: %AdditionalDataField{reference_label: "***"},
-                  country_code: "BR",
-                  crc: "8ECF",
-                  merchant_account_information: %MerchantAccountInfo{
-                    chave: nil,
-                    gui: "br.gov.bcb.pix",
-                    info_adicional: nil,
-                    url: "qr-h.sandbox.pix.bcb.gov.br/rest/api/v2/cobv/9b95a87c10a84d65bcbf55a48a2e50c8"
-                  },
-                  merchant_category_code: "0000",
-                  merchant_city: "BRASILIA",
-                  merchant_name: "Pix",
-                  payload_format_indicator: "01",
-                  point_of_initiation_method: nil,
-                  postal_code: nil,
-                  transaction_amount: nil,
-                  transaction_currency: "986",
-                  type: :dynamic_payment_with_due_date
-                }
-              }
+               :ok,
+               %BRCode{
+                 additional_data_field_template: %AdditionalDataField{reference_label: "***"},
+                 country_code: "BR",
+                 crc: "8ECF",
+                 merchant_account_information: %MerchantAccountInfo{
+                   chave: nil,
+                   gui: "br.gov.bcb.pix",
+                   info_adicional: nil,
+                   url:
+                     "qr-h.sandbox.pix.bcb.gov.br/rest/api/v2/cobv/9b95a87c10a84d65bcbf55a48a2e50c8"
+                 },
+                 merchant_category_code: "0000",
+                 merchant_city: "BRASILIA",
+                 merchant_name: "Pix",
+                 payload_format_indicator: "01",
+                 point_of_initiation_method: nil,
+                 postal_code: nil,
+                 transaction_amount: nil,
+                 transaction_currency: "986",
+                 type: :dynamic_payment_with_due_date
+               }
+             }
+    end
+
+    test "succeeds on validate BRCode size" do
+      assert {:error, :invalid_input_size} = Decoder.decode_to("00020104141234567890123426580014BR.GOV.BCB.PIX0136123e4567-e12b-12d1-a456-42665544000027300012BR.COM.OUTRO011001234567895204000053039865406123.455802BR5915NOMEDORECEBEDOR6008BRASILIA61087007490062530515RP123456789201950300017BR.GOV.BCB.PIX12301051.0.080450014BR.GOV.BCB.PIX0123PADRAO.URL.PIX/0123ABCD81390012BR.COM.OUTRO01190123.ABCD.3456.WXYZ8899009588888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888895500519090909090909090909090909090909090909090909090909096304ABE9")
+    end
+
+    test "succeeds on validate invalid format for merchant_name BRCode field" do
+      assert {:error, {:validation, changeset}} = Decoder.decode_to("00020126830014br.gov.bcb.pix01364004901d-bd85-4769-8e52-cb4c42c506dc0221Jornada pagador 57768520400005303986540573.625802BR5926BANCOCENTRALDOBRASIL0003816008BRASILIA62080504oooo6304EFF5")
+      assert [merchant_name: {"should be at most %{count} character(s)", [count: 25, validation: :length, kind: :max, type: :string]}] == changeset.errors
+    end
+
+    test "succeeds on validate invalid format for merchant_city BRCode field" do
+      assert {:error, {:validation, changeset}} = Decoder.decode_to("00020126830014br.gov.bcb.pix01364004901d-bd85-4769-8e52-cb4c42c506dc0221Jornada pagador 57768520400005303986540573.625802BR5903Pix6008Brasília62080504oooo6304B243")
+      assert [merchant_city: {"has invalid format", [validation: :format]}] == changeset.errors
+    end
+
+    test "succeeds on validate invalid format for reference_label BRCode field" do
+      assert {:error, {:validation, changeset}} = Decoder.decode_to("00020104141234567890123426580014BR.GOV.BCB.PIX0136123e4567-e12b-12d1-a456-42665544000027300012BR.COM.OUTRO011001234567895204000053039865406123.455802BR5917NOME DO RECEBEDOR6008BRASILIA610870074900622005161234567890👀1234580390012BR.COM.OUTRO01190123.ABCD.3456.WXYZ630475EF")
+      assert [reference_label: {"has invalid format", [validation: :format]}] = changeset.changes.additional_data_field_template.errors
+    end
+
+    test "Succeeds on validate protocol presence on URL" do
+      assert {:error, {:validation, changeset}} = Decoder.decode_to("00020126990014br.gov.bcb.pix2577https://qr-h.sandbox.pix.bcb.gov.br/rest/api/v2/ac8ab4efe7db4200885f5ab3c34725204000053039865802BR5903Pix6008BRASILIA62070503***63041043")
+      assert [url: {"URL with protocol", []}] == changeset.changes.merchant_account_information.errors
     end
   end
 end

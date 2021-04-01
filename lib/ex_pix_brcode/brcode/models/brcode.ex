@@ -1,6 +1,9 @@
 defmodule ExPixBRCode.BRCodes.Models.BRCode do
   @moduledoc """
-  Schema for BRCode
+  Schema for BRCode representation.
+
+  For a better understating of the EMV®-QRCPS fields specification, used by BRCode, is recommended
+  to consult [EMV® QR Code Specification for Payment Systems (EMV® QRCPS) Merchant-Presented Mode](https://www.emvco.com/emv-technologies/qrcodes/)
   """
 
   use ExPixBRCode.ValueObject
@@ -19,6 +22,8 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
     :transaction_amount,
     :postal_code
   ]
+
+  @alphanumeric_special_format ~r/^[\x20-\x7E]+$/
 
   embedded_schema do
     field :payload_format_indicator, :string, default: "01"
@@ -77,10 +82,17 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
     |> validate_format(:merchant_category_code, ~r/^[0-9]{4}$/)
     |> validate_inclusion(:transaction_currency, ~w(986))
     |> validate_length(:transaction_amount, max: 13)
-    # Formats accept: "0", "0.10", ".10", "1.", "1", "123.9","123.99", "123456789.23"
-    |> validate_format(:transaction_amount, ~r/^0$|^[0-9]+\.[0-9]{2}$|^[0-9]+\.[0-9]{1}$|^[1-9]{1}[0-9]*\.?$|^\.[0-9]{2}$/)
+    # Formats accept: "0.10", ".10", "1.", "1", "123.9","123.99", "123456789.23"
+    |> validate_format(
+      :transaction_amount,
+      ~r/^[0-9]+\.[0-9]{2}$|^[0-9]+\.[0-9]{1}$|^[1-9]{1}[0-9]*\.?$|^\.[0-9]{2}$/
+    )
     |> validate_inclusion(:country_code, ~w(BR))
     |> validate_length(:postal_code, is: 8)
+    |> validate_length(:merchant_name, max: 25)
+    |> validate_format(:merchant_name, @alphanumeric_special_format)
+    |> validate_length(:merchant_city, max: 15)
+    |> validate_format(:merchant_city, @alphanumeric_special_format)
     |> put_type()
   end
 
@@ -117,6 +129,14 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
     |> cast(params, [:reference_label])
     |> validate_required([:reference_label])
     |> validate_length(:reference_label, min: 1, max: 25)
+    |> validate_reference_label_format()
+  end
+
+  defp validate_reference_label_format(changeset) do
+    case get_field(changeset, :reference_label) do
+      "***" -> changeset
+      _ -> validate_format(changeset, :reference_label, ~r/^[a-zA-Z0-9]+$/)
+    end
   end
 
   defp validate_per_type(%{valid?: false} = c), do: c
@@ -162,12 +182,12 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
   end
 
   defp validate_url(changeset, url) do
-    case URI.parse("https://" <> url) do
-      %{path: path} when is_binary(path) ->
+    with {:validate_has_web_protocol, false} <- {:validate_has_web_protocol, Regex.match?(~r{^https?://\w+}, url)},
+    %{path: path} when is_binary(path) <- URI.parse("https://" <> url) do
         validate_pix_path(changeset, Path.split(path))
-
-      _ ->
-        add_error(changeset, :url, "malformed URL")
+    else
+      {:validate_has_web_protocol, true} -> add_error(changeset, :url, "URL with protocol")
+      _ -> add_error(changeset, :url, "malformed URL")
     end
   end
 
