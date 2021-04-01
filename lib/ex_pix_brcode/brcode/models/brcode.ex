@@ -82,7 +82,7 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
     |> validate_format(:merchant_category_code, ~r/^[0-9]{4}$/)
     |> validate_inclusion(:transaction_currency, ~w(986))
     |> validate_length(:transaction_amount, max: 13)
-    # Formats accept: "0", "0.10", ".10", "1.", "1", "123.9","123.99", "123456789.23"
+    # Formats accept: "0.10", ".10", "1.", "1", "123.9","123.99", "123456789.23"
     |> validate_format(
       :transaction_amount,
       ~r/^[0-9]+\.[0-9]{2}$|^[0-9]+\.[0-9]{1}$|^[1-9]{1}[0-9]*\.?$|^\.[0-9]{2}$/
@@ -182,11 +182,11 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
   end
 
   defp validate_url(changeset, url) do
-    with {:validate_has_web_protocol, nil} <- {:validate_has_web_protocol, Regex.run(~r/^[https:\/\/]+/, url)},
+    with {:validate_has_web_protocol, false} <- {:validate_has_web_protocol, Regex.match?(~r{^https?://\w+}, url)},
     %{path: path} when is_binary(path) <- URI.parse("https://" <> url) do
         validate_pix_path(changeset, Path.split(path))
     else
-      {:validate_has_web_protocol, _} -> add_error(changeset, :url, "URL with protocol")
+      {:validate_has_web_protocol, true} -> add_error(changeset, :url, "URL with protocol")
       _ -> add_error(changeset, :url, "malformed URL")
     end
   end

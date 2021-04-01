@@ -16,7 +16,7 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPaymentTest do
       assert {:error, {:validation, changeset}} =
                Changesets.cast_and_apply(StaticPixPayment, payload)
 
-      assert [key: {"has invalid format", [validation: :format]}] == changeset.errors
+      assert [key: {"has invalid format", []}] == changeset.errors
     end
   end
 end

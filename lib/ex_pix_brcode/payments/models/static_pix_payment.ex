@@ -33,10 +33,12 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPayment do
 
   defp validate_random_key_format(changeset) do
     key_type = get_change(changeset, :key_type)
-    if key_type == "random_key" do
-      validate_format(changeset, :key, ~r/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}/)
-    else
-      changeset
+    key = get_change(changeset, :key)
+
+    cond do
+      key_type == "random_key" and key == String.downcase(key) -> changeset
+      key_type == "random_key" and key != String.downcase(key) -> add_error(changeset, :key, "has invalid format")
+      true -> changeset
     end
   end
 end
