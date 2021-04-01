@@ -37,7 +37,7 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPayment do
 
     cond do
       key_type == "random_key" and key == String.downcase(key) -> changeset
-      key_type == "random_key" and key != String.downcase(key) -> add_error(changeset, :key, "has invalid format")
+      key_type == "random_key" -> add_error(changeset, :key, "has invalid format")
       true -> changeset
     end
   end
