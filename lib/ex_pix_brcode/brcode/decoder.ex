@@ -29,6 +29,8 @@ defmodule ExPixBRCode.BRCodes.Decoder do
     "80" => {"unreserved_templates", %{"00" => "gui"}}
   }
 
+  @max_size_in_bytes 512
+
   @doc """
   Decode input into a map with string keys with known keys for BRCode.
 
@@ -74,12 +76,14 @@ defmodule ExPixBRCode.BRCodes.Decoder do
               | {:unknown_key, String.t()}}
              | :unknown_error
              | :invalid_crc
-             | :invalid_input_length}
+             | :invalid_input_length
+             | :invalid_input_size}
 
   def decode(input, opts \\ []) do
     brcode = IO.iodata_to_binary(input)
 
-    with {:ok, {contents, crc}} <- extract_crc(brcode),
+    with {:ok, brcode} <- check_brcode_size(brcode),
+         {:ok, {contents, crc}} <- extract_crc(brcode),
          :ok <- validate_crc(contents, crc) do
       parse(brcode, opts)
     end
@@ -122,6 +126,9 @@ defmodule ExPixBRCode.BRCodes.Decoder do
         error
     end
   end
+
+  defp check_brcode_size(brcode) when byte_size(brcode) <= @max_size_in_bytes, do: {:ok, brcode}
+  defp check_brcode_size(_brcode), do: {:error, :invalid_input_size}
 
   @doc """
   Decode an iodata to a given schema module.
