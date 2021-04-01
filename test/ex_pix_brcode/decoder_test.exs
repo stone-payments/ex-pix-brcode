@@ -405,7 +405,7 @@ defmodule ExPixBRCode.DecoderTest do
       assert [reference_label: {"has invalid format", [validation: :format]}] = changeset.changes.additional_data_field_template.errors
     end
 
-    test "Ssucceeds on validate protocol presence on URL" do
+    test "Succeeds on validate protocol presence on URL" do
       assert {:error, {:validation, changeset}} = Decoder.decode_to("00020126990014br.gov.bcb.pix2577https://qr-h.sandbox.pix.bcb.gov.br/rest/api/v2/ac8ab4efe7db4200885f5ab3c34725204000053039865802BR5903Pix6008BRASILIA62070503***63041043")
       assert [url: {"URL with protocol", []}] == changeset.changes.merchant_account_information.errors
     end
