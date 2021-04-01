@@ -94,14 +94,14 @@ defmodule ExPixBRCode.BRCodes.Decoder do
   # 1-byte characters in the CRC and that we can count
   # right to left. The guard is needed so that
   # binary_part/3 doesn't raise
-  def extract_crc(binary) when byte_size(binary) > 4 do
+  defp extract_crc(binary) when byte_size(binary) > 4 do
     len = byte_size(binary)
     crc = binary_part(binary, len, -4)
     val = binary_part(binary, 0, len - 4)
     {:ok, {val, crc}}
   end
 
-  def extract_crc(_binary), do: {:error, :invalid_input_length}
+  defp extract_crc(_binary), do: {:error, :invalid_input_length}
 
   defp validate_crc(contents, received_crc) do
     calculated_crc =
