@@ -25,9 +25,6 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPayment do
     model
     |> cast(params, @required ++ @optional)
     |> validate_required(@required)
-    |> validate_length(:transaction_amount, max: 13)
-    |> validate_format(:transaction_amount, ~r/(^0$)|(^[0-9]+\.[0-9]*$)/)
-    |> validate_format(:transaction_id, ~r/^[a-zA-Z0-9]{1,25}$/)
     |> validate_random_key_format()
   end
 

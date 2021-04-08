@@ -5,6 +5,8 @@ defmodule ExPixBRCode.Payments do
 
   alias ExPixBRCode.BRCodes.Models.BRCode
 
+  alias ExPixBRCode.Changesets
+
   alias ExPixBRCode.Payments.DynamicPixLoader
 
   alias ExPixBRCode.Payments.Models.{
@@ -34,14 +36,13 @@ defmodule ExPixBRCode.Payments do
 
   def from_brcode(_client, %BRCode{type: :static} = brcode, _opts) do
     with key_type when is_binary(key_type) <- key_type(brcode.merchant_account_information.chave) do
-      {:ok,
-       %StaticPixPayment{
-         key: brcode.merchant_account_information.chave,
-         key_type: key_type,
-         additional_information: brcode.merchant_account_information.info_adicional,
-         transaction_amount: brcode.transaction_amount,
-         transaction_id: brcode.additional_data_field_template.reference_label
-       }}
+      Changesets.cast_and_apply(StaticPixPayment, %{
+        key: brcode.merchant_account_information.chave,
+        key_type: key_type,
+        additional_information: brcode.merchant_account_information.info_adicional,
+        transaction_amount: brcode.transaction_amount,
+        transaction_id: brcode.additional_data_field_template.reference_label
+      })
     end
   end
 

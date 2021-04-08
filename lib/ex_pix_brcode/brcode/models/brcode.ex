@@ -182,9 +182,10 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
   end
 
   defp validate_url(changeset, url) do
-    with {:validate_has_web_protocol, false} <- {:validate_has_web_protocol, Regex.match?(~r{^https?://\w+}, url)},
-    %{path: path} when is_binary(path) <- URI.parse("https://" <> url) do
-        validate_pix_path(changeset, Path.split(path))
+    with {:validate_has_web_protocol, false} <-
+           {:validate_has_web_protocol, Regex.match?(~r{^https?://\w+}, url)},
+         %{path: path} when is_binary(path) <- URI.parse("https://" <> url) do
+      validate_pix_path(changeset, Path.split(path))
     else
       {:validate_has_web_protocol, true} -> add_error(changeset, :url, "URL with protocol")
       _ -> add_error(changeset, :url, "malformed URL")
