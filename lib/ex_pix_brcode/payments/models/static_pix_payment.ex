@@ -11,6 +11,7 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPayment do
 
   @required [:key]
   @optional [:transaction_amount, :transaction_id, :additional_information, :key_type]
+  @transaction_amount_format ~r/^[0-9]+\.[0-9]{2}$|^[0-9]+\.[0-9]{1}$|^[1-9]{1}[0-9]*\.?$|^\.[0-9]{2}$/
 
   embedded_schema do
     field :key, :string
@@ -25,7 +26,19 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPayment do
     model
     |> cast(params, @required ++ @optional)
     |> validate_required(@required)
+    |> validate_format(:transaction_amount, @transaction_amount_format)
+    |> validate_transaction_id()
     |> validate_random_key_format()
+  end
+
+  defp validate_transaction_id(changeset) do
+    transaction_id = get_change(changeset, :transaction_id)
+
+    case transaction_id do
+      "***" -> changeset
+      _transaction_id -> validate_format(changeset, :transaction_id, ~r/^[a-zA-Z0-9]{1,25}$/)
+    end
+
   end
 
   defp validate_random_key_format(changeset) do
