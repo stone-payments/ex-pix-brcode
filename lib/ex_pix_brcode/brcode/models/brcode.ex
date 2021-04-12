@@ -128,15 +128,7 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
     model
     |> cast(params, [:reference_label])
     |> validate_required([:reference_label])
-    |> validate_length(:reference_label, min: 1, max: 25)
-    |> validate_reference_label_format()
-  end
-
-  defp validate_reference_label_format(changeset) do
-    case get_field(changeset, :reference_label) do
-      "***" -> changeset
-      _ -> validate_format(changeset, :reference_label, ~r/^[a-zA-Z0-9]+$/)
-    end
+    |> validate_format(:reference_label, ~r(^[a-zA-Z0-9]{1,25}$|^\*\*\*$))
   end
 
   defp validate_per_type(%{valid?: false} = c), do: c
