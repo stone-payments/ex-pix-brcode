@@ -275,7 +275,7 @@ defmodule ExPixBRCode.DecoderTest do
 
     test "succeds with BRCode has transaction_amount with '10'" do
       assert Decoder.decode_to(
-        "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid5204000053039865402105802BR5904CARL6010SAN.FIERRO62090505o1ab46304970D"
+               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid5204000053039865402105802BR5904CARL6010SAN.FIERRO62090505o1ab46304970D"
              ) ==
                {:ok,
                 %BRCode{
@@ -331,7 +331,7 @@ defmodule ExPixBRCode.DecoderTest do
 
     test "succeds with BRCode has transaction_amount with '0.9'" do
       assert Decoder.decode_to(
-        "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid52040000530398654030.95802BR5904CARL6010SAN.FIERRO62100506b4b4c463044D69"
+               "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid52040000530398654030.95802BR5904CARL6010SAN.FIERRO62100506b4b4c463044D69"
              ) ==
                {:ok,
                 %BRCode{
@@ -387,27 +387,52 @@ defmodule ExPixBRCode.DecoderTest do
     end
 
     test "succeeds on validate BRCode size" do
-      assert {:error, :invalid_input_size} = Decoder.decode_to("00020104141234567890123426580014BR.GOV.BCB.PIX0136123e4567-e12b-12d1-a456-42665544000027300012BR.COM.OUTRO011001234567895204000053039865406123.455802BR5915NOMEDORECEBEDOR6008BRASILIA61087007490062530515RP123456789201950300017BR.GOV.BCB.PIX12301051.0.080450014BR.GOV.BCB.PIX0123PADRAO.URL.PIX/0123ABCD81390012BR.COM.OUTRO01190123.ABCD.3456.WXYZ8899009588888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888895500519090909090909090909090909090909090909090909090909096304ABE9")
+      assert {:error, :invalid_input_size} =
+               Decoder.decode_to(
+                 "00020104141234567890123426580014BR.GOV.BCB.PIX0136123e4567-e12b-12d1-a456-42665544000027300012BR.COM.OUTRO011001234567895204000053039865406123.455802BR5915NOMEDORECEBEDOR6008BRASILIA61087007490062530515RP123456789201950300017BR.GOV.BCB.PIX12301051.0.080450014BR.GOV.BCB.PIX0123PADRAO.URL.PIX/0123ABCD81390012BR.COM.OUTRO01190123.ABCD.3456.WXYZ8899009588888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888895500519090909090909090909090909090909090909090909090909096304ABE9"
+               )
     end
 
     test "succeeds on validate invalid format for merchant_name BRCode field" do
-      assert {:error, {:validation, changeset}} = Decoder.decode_to("00020126830014br.gov.bcb.pix01364004901d-bd85-4769-8e52-cb4c42c506dc0221Jornada pagador 57768520400005303986540573.625802BR5926BANCOCENTRALDOBRASIL0003816008BRASILIA62080504oooo6304EFF5")
-      assert [merchant_name: {"should be at most %{count} character(s)", [count: 25, validation: :length, kind: :max, type: :string]}] == changeset.errors
+      assert {:error, {:validation, changeset}} =
+               Decoder.decode_to(
+                 "00020126830014br.gov.bcb.pix01364004901d-bd85-4769-8e52-cb4c42c506dc0221Jornada pagador 57768520400005303986540573.625802BR5926BANCOCENTRALDOBRASIL0003816008BRASILIA62080504oooo6304EFF5"
+               )
+
+      assert [
+               merchant_name:
+                 {"should be at most %{count} character(s)",
+                  [count: 25, validation: :length, kind: :max, type: :string]}
+             ] == changeset.errors
     end
 
     test "succeeds on validate invalid format for merchant_city BRCode field" do
-      assert {:error, {:validation, changeset}} = Decoder.decode_to("00020126830014br.gov.bcb.pix01364004901d-bd85-4769-8e52-cb4c42c506dc0221Jornada pagador 57768520400005303986540573.625802BR5903Pix6008Brasília62080504oooo6304B243")
+      assert {:error, {:validation, changeset}} =
+               Decoder.decode_to(
+                 "00020126830014br.gov.bcb.pix01364004901d-bd85-4769-8e52-cb4c42c506dc0221Jornada pagador 57768520400005303986540573.625802BR5903Pix6008Brasília62080504oooo6304B243"
+               )
+
       assert [merchant_city: {"has invalid format", [validation: :format]}] == changeset.errors
     end
 
     test "succeeds on validate invalid format for reference_label BRCode field" do
-      assert {:error, {:validation, changeset}} = Decoder.decode_to("00020104141234567890123426580014BR.GOV.BCB.PIX0136123e4567-e12b-12d1-a456-42665544000027300012BR.COM.OUTRO011001234567895204000053039865406123.455802BR5917NOME DO RECEBEDOR6008BRASILIA610870074900622005161234567890👀1234580390012BR.COM.OUTRO01190123.ABCD.3456.WXYZ630475EF")
-      assert [reference_label: {"has invalid format", [validation: :format]}] = changeset.changes.additional_data_field_template.errors
+      assert {:error, {:validation, changeset}} =
+               Decoder.decode_to(
+                 "00020104141234567890123426580014BR.GOV.BCB.PIX0136123e4567-e12b-12d1-a456-42665544000027300012BR.COM.OUTRO011001234567895204000053039865406123.455802BR5917NOME DO RECEBEDOR6008BRASILIA610870074900622005161234567890👀1234580390012BR.COM.OUTRO01190123.ABCD.3456.WXYZ630475EF"
+               )
+
+      assert [reference_label: {"has invalid format", [validation: :format]}] =
+               changeset.changes.additional_data_field_template.errors
     end
 
     test "Succeeds on validate protocol presence on URL" do
-      assert {:error, {:validation, changeset}} = Decoder.decode_to("00020126990014br.gov.bcb.pix2577https://qr-h.sandbox.pix.bcb.gov.br/rest/api/v2/ac8ab4efe7db4200885f5ab3c34725204000053039865802BR5903Pix6008BRASILIA62070503***63041043")
-      assert [url: {"URL with protocol", []}] == changeset.changes.merchant_account_information.errors
+      assert {:error, {:validation, changeset}} =
+               Decoder.decode_to(
+                 "00020126990014br.gov.bcb.pix2577https://qr-h.sandbox.pix.bcb.gov.br/rest/api/v2/ac8ab4efe7db4200885f5ab3c34725204000053039865802BR5903Pix6008BRASILIA62070503***63041043"
+               )
+
+      assert [url: {"URL with protocol", []}] ==
+               changeset.changes.merchant_account_information.errors
     end
   end
 end
