@@ -2,7 +2,7 @@ defmodule ExPixBRCode.Payments.DynamicPixLoaderTest do
   use ExUnit.Case, async: true
 
   alias ExPixBRCode.Payments.DynamicPixLoader
-  alias ExPixBRCode.Payments.Models.DynamicImmediatePixPayment
+  alias ExPixBRCode.Payments.Models.{DynamicImmediatePixPayment, DynamicPixPaymentWithDueDate}
   alias ExPixBRCode.Payments.Models.DynamicImmediatePixPayment.{Calendario, Valor}
 
   @client Tesla.client([], Tesla.Mock)
@@ -132,6 +132,66 @@ defmodule ExPixBRCode.Payments.DynamicPixLoaderTest do
                   txid: "4DE46328260C11EB91C04049FC2CA371",
                   valor: %Valor{original: Decimal.new("1.00")}
                 }} == DynamicPixLoader.load_pix(@client, pix_url)
+
+        x5t = ctx.jwks["keys"] |> hd() |> Map.get("x5t")
+        kid = ctx.jwks["keys"] |> hd() |> Map.get("kid")
+        key = {x5t, kid}
+        assert %{^key => _} = :persistent_term.get(ctx.jku)
+      end
+
+      test "succeeds for dynamic due date payment with #{key_type} key", %{jku: jku} = ctx do
+        dpp = "2020-11-13"
+        cod_mun = "1111111"
+        devedor_cpf = Brcpfcnpj.cpf_generate()
+        recebedor_cpf = Brcpfcnpj.cpf_generate()
+
+        payment =
+          build_due_date_pix_payment()
+          |> with_key(unquote(key_type))
+          |> put_in([:devedor, :cpf], devedor_cpf)
+          |> put_in([:recebedor, :cpf], recebedor_cpf)
+
+        pix_url =
+          "https://somepixpsp.br/pix/v2/cobv/#{Ecto.UUID.generate()}?DPP=#{dpp}&codMun=#{cod_mun}"
+
+        Tesla.Mock.mock(fn
+          %{url: ^pix_url, query: [DPP: ^dpp, codMun: ^cod_mun]} ->
+            %{}
+            |> Joken.generate_and_sign!(payment, ctx.signer)
+            |> Tesla.Mock.text(headers: [{"content-type", "application/jose"}])
+
+          %{url: ^jku} ->
+            Tesla.Mock.json(ctx.jwks)
+        end)
+
+        assert {:ok,
+                %DynamicPixPaymentWithDueDate{
+                  calendario: %DynamicPixPaymentWithDueDate.Calendario{
+                    apresentacao: ~U[2020-11-28 03:15:39Z],
+                    criacao: ~U[2020-11-13 23:59:49Z],
+                    dataDeVencimento: ~D[2020-11-13],
+                    validadeAposVencimento: 30
+                  },
+                  chave: payment.chave,
+                  devedor: %DynamicPixPaymentWithDueDate.Devedor{
+                    cpf: devedor_cpf,
+                    nome: "Cicrano"
+                  },
+                  infoAdicionais: [],
+                  revisao: 0,
+                  solicitacaoPagador: nil,
+                  status: :ATIVA,
+                  txid: "4DE46328260C11EB91C04049FC2CA371",
+                  valor: %DynamicPixPaymentWithDueDate.Valor{final: Decimal.new("1.00")},
+                  recebedor: %DynamicPixPaymentWithDueDate.Recebedor{
+                    cpf: recebedor_cpf,
+                    nome: "Fulano",
+                    cidade: "Rio de Janeiro",
+                    uf: "RJ",
+                    cep: "28610-160",
+                    logradouro: "Avenida Brasil"
+                  }
+                }} == DynamicPixLoader.load_pix(@client, pix_url, dpp: dpp, cod_mun: cod_mun)
 
         x5t = ctx.jwks["keys"] |> hd() |> Map.get("x5t")
         kid = ctx.jwks["keys"] |> hd() |> Map.get("kid")
@@ -293,6 +353,36 @@ defmodule ExPixBRCode.Payments.DynamicPixLoaderTest do
       status: :ATIVA,
       txid: "4DE46328260C11EB91C04049FC2CA371",
       valor: %{original: "1.00"}
+    }
+  end
+
+  defp build_due_date_pix_payment do
+    %{
+      calendario: %{
+        apresentacao: "2020-11-28 03:15:39Z",
+        criacao: "2020-11-13 23:59:49Z",
+        dataDeVencimento: "2020-11-13",
+        validadeAposVencimento: 30
+      },
+      chave: "14413050762",
+      devedor: %{
+        cpf: Brcpfcnpj.cpf_generate(),
+        nome: "Cicrano"
+      },
+      infoAdicionais: [],
+      revisao: 0,
+      solicitacaoPagador: nil,
+      status: :ATIVA,
+      txid: "4DE46328260C11EB91C04049FC2CA371",
+      valor: %{final: "1.00"},
+      recebedor: %{
+        cpf: Brcpfcnpj.cpf_generate(),
+        nome: "Fulano",
+        cidade: "Rio de Janeiro",
+        uf: "RJ",
+        cep: "28610-160",
+        logradouro: "Avenida Brasil"
+      }
     }
   end
 
