@@ -17,8 +17,12 @@ defmodule ExPixBRCode.Payments.DynamicPixLoader do
 
   @doc """
   Given a `t:Tesla.Client` and a PIX payment URL it loads its details after validation.
+
+  ## Options
+    * `:dpp` - The intended payment date.
+    * `:cod_mun` - The customer municipality code.
   """
-  @spec load_pix(Tesla.Client.t(), String.t()) ::
+  @spec load_pix(Tesla.Client.t(), String.t(), keyword()) ::
           {:ok, DynamicImmediatePixPayment.t() | DynamicPixPaymentWithDueDate.t()}
           | {:error, atom()}
   def load_pix(client, url, opts \\ []) do
@@ -145,8 +149,7 @@ defmodule ExPixBRCode.Payments.DynamicPixLoader do
     |> Enum.filter(fn {opt, value} -> opt in @valid_query_params and not is_nil(value) end)
     |> Enum.map(fn
       {:cod_mun, value} -> {:codMun, value}
-      {:dpp, value} -> {:DDP, value}
-      opt -> opt
+      {:dpp, value} -> {:DPP, value}
     end)
   end
 end
