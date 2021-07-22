@@ -88,7 +88,7 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
       ~r/^[0-9]+\.[0-9]{2}$|^[0-9]+\.[0-9]{1}$|^[1-9]{1}[0-9]*\.?$|^\.[0-9]{2}$/
     )
     |> validate_inclusion(:country_code, ~w(BR))
-    |> validate_length(:postal_code, is: 8)
+    |> validate_length(:postal_code, min: 1, max: 10)
     |> validate_length(:merchant_name, max: 25)
     |> validate_format(:merchant_name, @alphanumeric_special_format)
     |> validate_length(:merchant_city, max: 15)

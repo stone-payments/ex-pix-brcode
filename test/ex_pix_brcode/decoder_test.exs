@@ -357,6 +357,36 @@ defmodule ExPixBRCode.DecoderTest do
                 }}
     end
 
+    test "succeeds with BRCode has postal_code length greater than eight characters" do
+      brcode =
+        "00020126580014BR.GOV.BCB.PIX013611111111-1111-1111-1111-11111111111152040000530398654040.015802BR5925Teste do Teste do TesteIE6009SAO PAULO610911111111162160512NUgpnvaS87Ts630452B6"
+
+      assert Decoder.decode_to(brcode) ==
+               {:ok,
+                %BRCode{
+                  additional_data_field_template: %AdditionalDataField{
+                    reference_label: "NUgpnvaS87Ts"
+                  },
+                  country_code: "BR",
+                  crc: "52B6",
+                  merchant_account_information: %MerchantAccountInfo{
+                    chave: "11111111-1111-1111-1111-111111111111",
+                    gui: "BR.GOV.BCB.PIX",
+                    info_adicional: nil,
+                    url: nil
+                  },
+                  merchant_category_code: "0000",
+                  merchant_city: "SAO PAULO",
+                  merchant_name: "Teste do Teste do TesteIE",
+                  payload_format_indicator: "01",
+                  point_of_initiation_method: nil,
+                  postal_code: "111111111",
+                  transaction_amount: "0.01",
+                  transaction_currency: "986",
+                  type: :static
+                }}
+    end
+
     test "succeeds on BRCode type identification with dynamic_payment_with_due_date type" do
       assert Decoder.decode_to(
                "00020126990014br.gov.bcb.pix2577qr-h.sandbox.pix.bcb.gov.br/rest/api/v2/cobv/9b95a87c10a84d65bcbf55a48a2e50c85204000053039865802BR5903Pix6008BRASILIA62070503***63048ECF"
@@ -425,7 +455,7 @@ defmodule ExPixBRCode.DecoderTest do
                changeset.changes.additional_data_field_template.errors
     end
 
-    test "Succeeds on validate protocol presence on URL" do
+    test "succeeds on validate protocol presence on URL" do
       assert {:error, {:validation, changeset}} =
                Decoder.decode_to(
                  "00020126990014br.gov.bcb.pix2577https://qr-h.sandbox.pix.bcb.gov.br/rest/api/v2/ac8ab4efe7db4200885f5ab3c34725204000053039865802BR5903Pix6008BRASILIA62070503***63041043"
