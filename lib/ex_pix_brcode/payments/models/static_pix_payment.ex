@@ -10,7 +10,13 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPayment do
   use ExPixBRCode.ValueObject
 
   @required [:key]
-  @optional [:transaction_amount, :transaction_id, :additional_information, :key_type]
+  @optional [
+    :transaction_amount,
+    :transaction_id,
+    :additional_information,
+    :key_type,
+    :withdrawal_service_provider
+  ]
   @transaction_amount_format ~r/^[0-9]+\.[0-9]{2}$|^[0-9]+\.[0-9]{1}$|^[1-9]{1}[0-9]*\.?$|^\.[0-9]{2}$/
 
   embedded_schema do
@@ -19,6 +25,7 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPayment do
     field :additional_information, :string
     field :transaction_amount, :string
     field :transaction_id, :string
+    field :withdrawal_service_provider, :string
   end
 
   @doc false
@@ -28,6 +35,7 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPayment do
     |> validate_required(@required)
     |> validate_format(:transaction_amount, @transaction_amount_format)
     |> validate_format(:transaction_id, ~r(^[a-zA-Z0-9]{1,25}$|^\*\*\*$))
+    |> validate_length(:withdrawal_service_provider, is: 8)
     |> validate_random_key_format()
   end
 
