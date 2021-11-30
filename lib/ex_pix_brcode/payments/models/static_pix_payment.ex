@@ -36,6 +36,7 @@ defmodule ExPixBRCode.Payments.Models.StaticPixPayment do
     |> validate_format(:transaction_amount, @transaction_amount_format)
     |> validate_format(:transaction_id, ~r(^[a-zA-Z0-9]{1,25}$|^\*\*\*$))
     |> validate_length(:withdrawal_service_provider, is: 8)
+    |> validate_format(:withdrawal_service_provider, ~r/^[[:digit:]]+$/)
     |> validate_random_key_format()
   end
 
