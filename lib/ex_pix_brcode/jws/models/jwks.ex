@@ -89,11 +89,47 @@ defmodule ExPixBRCode.JWS.Models.JWKS do
        when is_nil(crv) or is_nil(x) or is_nil(y),
        do: add_error(changeset, :kty, "Missing EC params `crv`, `x` or `y`")
 
-  defp validate_curve_key(changeset, _, _, _), do: changeset
+  defp validate_curve_key(changeset, _, x, y), do: validate_curve_params(changeset, x, y)
 
   defp validate_rsa_key(changeset, n, e)
        when is_nil(n) or is_nil(e),
        do: add_error(changeset, :kty, "Missing RSA params `e` or `n`")
 
-  defp validate_rsa_key(changeset, _, _), do: changeset
+  defp validate_rsa_key(changeset, n, e), do: validate_rsa_params(changeset, n, e)
+
+  defp validate_rsa_params(changeset, n, e) do
+    case {:n, Base.url_decode64(n, padding: false), :e, Base.url_decode64(e, padding: false)} do
+      {:n, :error, :e, :error} ->
+        changeset
+        |> add_error(:e, "Non-base64url-alphabet digit found")
+        |> add_error(:n, "Non-base64url-alphabet digit found")
+
+      {:n, :error, :e, _} ->
+        add_error(changeset, :n, "Non-base64url-alphabet digit found")
+
+      {:n, _, :e, :error} ->
+        add_error(changeset, :e, "Non-base64url-alphabet digit found")
+
+      {:n, _, :e, _} ->
+        changeset
+    end
+  end
+
+  defp validate_curve_params(changeset, x, y) do
+    case {:x, Base.url_decode64(x, padding: false), :y, Base.url_decode64(y, padding: false)} do
+      {:x, :error, :y, :error} ->
+        changeset
+        |> add_error(:x, "Non-base64url-alphabet digit found")
+        |> add_error(:y, "Non-base64url-alphabet digit found")
+
+      {:x, :error, :y, _} ->
+        add_error(changeset, :x, "Non-base64url-alphabet digit found")
+
+      {:x, _, :y, :error} ->
+        add_error(changeset, :y, "Non-base64url-alphabet digit found")
+
+      {:x, _, :y, _} ->
+        changeset
+    end
+  end
 end
