@@ -3,7 +3,14 @@ defmodule ExPixBRCode.Payments.DynamicPixLoaderTest do
 
   alias ExPixBRCode.Payments.DynamicPixLoader
   alias ExPixBRCode.Payments.Models.{DynamicImmediatePixPayment, DynamicPixPaymentWithDueDate}
-  alias ExPixBRCode.Payments.Models.DynamicImmediatePixPayment.{Calendario, Valor}
+
+  alias ExPixBRCode.Payments.Models.DynamicImmediatePixPayment.{
+    Calendario,
+    Valor,
+    Valor.Retirada,
+    Valor.Retirada.Saque,
+    Valor.Retirada.Troco
+  }
 
   @client Tesla.client([], Tesla.Mock)
 
@@ -198,6 +205,104 @@ defmodule ExPixBRCode.Payments.DynamicPixLoaderTest do
         key = {x5t, kid}
         assert %{^key => _} = :persistent_term.get(ctx.jku)
       end
+
+      test "succeeds for withdrawal with #{key_type} key", %{jku: jku} = ctx do
+        payment = build_pix_withdrawal() |> with_key(unquote(key_type))
+        pix_url = "https://somepixpsp.br/pix/v2/#{Ecto.UUID.generate()}"
+
+        Tesla.Mock.mock(fn
+          %{url: ^pix_url} ->
+            %{}
+            |> Joken.generate_and_sign!(payment, ctx.signer)
+            |> Tesla.Mock.text(headers: [{"content-type", "application/jose"}])
+
+          %{url: ^jku} ->
+            Tesla.Mock.json(ctx.jwks)
+        end)
+
+        assert {:ok,
+                %DynamicImmediatePixPayment{
+                  calendario: %Calendario{
+                    apresentacao: ~U[2020-11-28 03:15:39Z],
+                    criacao: ~U[2020-11-13 23:59:49Z],
+                    expiracao: 86400
+                  },
+                  chave: payment.chave,
+                  devedor: nil,
+                  infoAdicionais: [],
+                  revisao: 0,
+                  solicitacaoPagador: nil,
+                  status: :ATIVA,
+                  txid: "4DE46328260C11EB91C04049FC2CA371",
+                  valor: %Valor{
+                    modalidadeAlteracao: 0,
+                    original: Decimal.new("0.00"),
+                    retirada: %Retirada{
+                      saque: %Saque{
+                        modalidadeAgente: "AGTEC",
+                        modalidadeAlteracao: 0,
+                        prestadorDoServicoDeSaque: "16501555",
+                        valor: Decimal.new("10.00")
+                      },
+                      troco: nil
+                    }
+                  }
+                }} == DynamicPixLoader.load_pix(@client, pix_url)
+
+        x5t = ctx.jwks["keys"] |> hd() |> Map.get("x5t")
+        kid = ctx.jwks["keys"] |> hd() |> Map.get("kid")
+        key = {x5t, kid}
+        assert %{^key => _} = :persistent_term.get(ctx.jku)
+      end
+
+      test "succeeds for payment with change with #{key_type} key", %{jku: jku} = ctx do
+        payment = build_pix_payment_with_change() |> with_key(unquote(key_type))
+        pix_url = "https://somepixpsp.br/pix/v2/#{Ecto.UUID.generate()}"
+
+        Tesla.Mock.mock(fn
+          %{url: ^pix_url} ->
+            %{}
+            |> Joken.generate_and_sign!(payment, ctx.signer)
+            |> Tesla.Mock.text(headers: [{"content-type", "application/jose"}])
+
+          %{url: ^jku} ->
+            Tesla.Mock.json(ctx.jwks)
+        end)
+
+        assert {:ok,
+                %DynamicImmediatePixPayment{
+                  calendario: %Calendario{
+                    apresentacao: ~U[2020-11-28 03:15:39Z],
+                    criacao: ~U[2020-11-13 23:59:49Z],
+                    expiracao: 86400
+                  },
+                  chave: payment.chave,
+                  devedor: nil,
+                  infoAdicionais: [],
+                  revisao: 0,
+                  solicitacaoPagador: nil,
+                  status: :ATIVA,
+                  txid: "4DE46328260C11EB91C04049FC2CA371",
+                  valor: %Valor{
+                    modalidadeAlteracao: 0,
+                    original: Decimal.new("10.00"),
+                    retirada: %Retirada{
+                      troco: %Troco{
+                        modalidadeAgente: "AGTEC",
+                        modalidadeAlteracao: 0,
+                        prestadorDoServicoDeSaque: "16501555",
+                        valor: Decimal.new("10.00")
+                      },
+                      saque: nil
+                    }
+                  }
+                }} == DynamicPixLoader.load_pix(@client, pix_url)
+
+        x5t = ctx.jwks["keys"] |> hd() |> Map.get("x5t")
+        kid = ctx.jwks["keys"] |> hd() |> Map.get("kid")
+        key = {x5t, kid}
+        assert %{^key => _} = :persistent_term.get(ctx.jku)
+      end
     end
 
     test "can skip certifica validations", %{jku: jku} = ctx do
@@ -353,6 +458,64 @@ defmodule ExPixBRCode.Payments.DynamicPixLoaderTest do
       status: :ATIVA,
       txid: "4DE46328260C11EB91C04049FC2CA371",
       valor: %{original: "1.00"}
+    }
+  end
+
+  defp build_pix_withdrawal do
+    %{
+      calendario: %{
+        apresentacao: "2020-11-28 03:15:39Z",
+        criacao: "2020-11-13 23:59:49Z",
+        expiracao: 86400
+      },
+      chave: "14413050762",
+      devedor: nil,
+      infoAdicionais: [],
+      revisao: 0,
+      solicitacaoPagador: nil,
+      status: :ATIVA,
+      txid: "4DE46328260C11EB91C04049FC2CA371",
+      valor: %{
+        original: "0.00",
+        modalidadeAlteracao: 0,
+        retirada: %{
+          saque: %{
+            valor: "10.00",
+            modalidadeAlteracao: 0,
+            prestadorDoServicoDeSaque: "16501555",
+            modalidadeAgente: "AGTEC"
+          }
+        }
+      }
+    }
+  end
+
+  defp build_pix_payment_with_change do
+    %{
+      calendario: %{
+        apresentacao: "2020-11-28 03:15:39Z",
+        criacao: "2020-11-13 23:59:49Z",
+        expiracao: 86400
+      },
+      chave: "14413050762",
+      devedor: nil,
+      infoAdicionais: [],
+      revisao: 0,
+      solicitacaoPagador: nil,
+      status: :ATIVA,
+      txid: "4DE46328260C11EB91C04049FC2CA371",
+      valor: %{
+        original: "10.00",
+        modalidadeAlteracao: 0,
+        retirada: %{
+          troco: %{
+            valor: "10.00",
+            modalidadeAlteracao: 0,
+            prestadorDoServicoDeSaque: "16501555",
+            modalidadeAgente: "AGTEC"
+          }
+        }
+      }
     }
   end
 
