@@ -235,6 +235,9 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
 
       is_nil(saque) and not is_nil(troco) ->
         validate_number(changeset, :original, greater_than: 0)
+
+      true ->
+        changeset
     end
   end
 
@@ -259,10 +262,18 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
 
     cond do
       not is_nil(saque) and not is_nil(troco) ->
-        add_error(changeset, :retirada, "only one of saque or troco must be present")
+        add_error(
+          changeset,
+          :retirada,
+          "only one of withdrawal or payment with change must be present"
+        )
 
       modalidade_alteracao == 1 ->
-        add_error(changeset, :modalidadeAlteracao, "must be 0 when it is troco or saque")
+        add_error(
+          changeset,
+          :modalidadeAlteracao,
+          "must be 0 when it is withdrawal or payment with change"
+        )
 
       true ->
         changeset
