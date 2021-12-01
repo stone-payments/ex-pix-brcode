@@ -260,7 +260,6 @@ defmodule ExPixBRCode.Payments.DynamicPixLoaderTest do
       assert %{^key => _} = :persistent_term.get(ctx.jku)
     end
 
-    @tag :focus
     test "validates parameters for RSA public keys",
          %{jku: jku, invalid_jwk: invalid_jwk} = ctx do
       payment = build_pix_payment() |> with_key(:cpf)
