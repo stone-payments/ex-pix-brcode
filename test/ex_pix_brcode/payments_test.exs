@@ -21,6 +21,7 @@ defmodule ExPixBRCode.PaymentTest do
                  chave: "123e4567-e12b-12d1-a456-426655440000",
                  gui: "br.gov.bcb.pix",
                  info_adicional: nil,
+                 pss: nil,
                  url: nil
                },
                merchant_category_code: "0000",
@@ -40,14 +41,15 @@ defmodule ExPixBRCode.PaymentTest do
                 key: "123e4567-e12b-12d1-a456-426655440000",
                 key_type: "random_key",
                 transaction_amount: nil,
-                transaction_id: "***"
+                transaction_id: "***",
+                withdrawal_service_provider: nil
               }} == Payments.from_brcode(nil, brcode)
     end
 
     test "successfully cast static payment with optional fields" do
       assert {:ok, brcode} =
                Decoder.decode_to(
-                 "00020126490014BR.GOV.BCB.PIX0111111111111110212Vacina covid52040000530398654031005802BR5904CARL6010SAN.FIERRO62070503aB16304AE0E"
+                 "00020126610014BR.GOV.BCB.PIX0111111111111110212Vacina covid03081650155552040000530398654031005802BR5904CARL6010SAN.FIERRO62070503aB16304327E"
                )
 
       assert brcode == %BRCode{
@@ -55,11 +57,12 @@ defmodule ExPixBRCode.PaymentTest do
                  reference_label: "aB1"
                },
                country_code: "BR",
-               crc: "AE0E",
+               crc: "327E",
                merchant_account_information: %BRCode.MerchantAccountInfo{
                  chave: "11111111111",
                  gui: "BR.GOV.BCB.PIX",
                  info_adicional: "Vacina covid",
+                 pss: "16501555",
                  url: nil
                },
                merchant_category_code: "0000",
@@ -79,7 +82,8 @@ defmodule ExPixBRCode.PaymentTest do
                 key: "11111111111",
                 key_type: "cpf",
                 transaction_amount: "100",
-                transaction_id: "aB1"
+                transaction_id: "aB1",
+                withdrawal_service_provider: "16501555"
               }} == Payments.from_brcode(nil, brcode)
     end
   end

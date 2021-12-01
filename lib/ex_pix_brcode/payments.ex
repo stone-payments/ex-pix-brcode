@@ -41,7 +41,8 @@ defmodule ExPixBRCode.Payments do
         key_type: key_type,
         additional_information: brcode.merchant_account_information.info_adicional,
         transaction_amount: brcode.transaction_amount,
-        transaction_id: brcode.additional_data_field_template.reference_label
+        transaction_id: brcode.additional_data_field_template.reference_label,
+        withdrawal_service_provider: brcode.merchant_account_information.pss
       })
     end
   end
