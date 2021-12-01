@@ -47,59 +47,21 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
     end
 
     embeds_one :valor, Valor, primary_key: false do
-      # Campo Obrigatório
-      # Quando NAO for saque ou troco, DEVE ser maior que 0 EXCETO se modalidadeAlteracao for 1
-      # Quando for saque, DEVE ser 0
-      # Quando for troco, DEVE ser MAIOR que 0 referente a compra do produto.
       field :original, :decimal
-
-      # Campo opcional
-      # Valores aceitos serão 0 ou 1
-      # Caso ausente, o valor será 0
-      # Caso seja saque ou troco, sempre será 0 (ou pode vir sem prenchimento que no caso será igual a 0)
       field :modalidadeAlteracao, :integer, default: 0
 
       embeds_one :retirada, Retirada, primary_key: false do
-        # valor.retirada.saque  e valor.retirada.troco não é possível que ambas sejam fornecidas em conjunto (São mutualmente excludentes)
-        # Campo opcional
         embeds_one :saque, Saque, primary_key: false do
-          # CAMPO OBRIGATÕRIO
-          # Deve ser maior que 0 se valor.retirada.saque.modalidadeAlteracao for 0(zero)
-          # Pode ser 0 caso valor.retirada.saque.modalidadeAlteracao for 1
           field :valor, :decimal
-
-          # Campo opcional
-          # Valores aceitos serão 0 ou 1
-          # Caso ausente, o valor será 0
           field :modalidadeAlteracao, :integer, default: 0
-
-          # CAMPO OBRIGATÕRIO
-          # Adicionar o validação de ISPB
           field :prestadorDoServicoDeSaque, :string
-
-          # CAMPO OBRIGATÕRIO
-          # Valores que sao aceitos (AGTEC) (AGTOT) (AGPSS)
           field :modalidadeAgente, :string
         end
 
-        # Campo opcional
         embeds_one :troco, Troco, primary_key: false do
-          # CAMPO OBRIGATÕRIO
-          # DEVE ser maior que 0 caso valor.retirada.troco.modalidadeAlteracao for 0 (zero)
-          # Pode ser 0.00 (zero) se valor.retirada.troco.modalidadeAlteracao for 1
           field :valor, :decimal
-
-          # Campo opcional
-          # Valores aceitos serão 0 ou 1
-          # Caso ausente, o valor será 0
           field :modalidadeAlteracao, :integer, default: 0
-
-          # CAMPO OBRIGATÕRIO
-          # Adicionar o validação de ISPB
           field :prestadorDoServicoDeSaque, :string
-
-          # CAMPO OBRIGATÕRIO
-          # Valor aceito (AGTEC)
           field :modalidadeAgente, :string
         end
       end
