@@ -66,7 +66,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
           # CAMPO OBRIGATÕRIO
           # Deve ser maior que 0 se valor.retirada.saque.modalidadeAlteracao for 0(zero)
           # Pode ser 0 caso valor.retirada.saque.modalidadeAlteracao for 1
-          field :valor, :string
+          field :valor, :decimal
 
           # Campo opcional
           # Valores aceitos serão 0 ou 1
@@ -87,7 +87,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
           # CAMPO OBRIGATÕRIO
           # DEVE ser maior que 0 caso valor.retirada.troco.modalidadeAlteracao for 0 (zero)
           # Pode ser 0.00 (zero) se valor.retirada.troco.modalidadeAlteracao for 1
-          field :valor, :string
+          field :valor, :decimal
 
           # Campo opcional
           # Valores aceitos serão 0 ou 1
@@ -170,73 +170,20 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
     |> cast(params, @valor_required ++ @valor_optional)
     |> validate_required(@valor_required)
     |> validate_inclusion(:modalidadeAlteracao, [0, 1])
+    |> cast_embed(:retirada, with: &retirada_changeset/2)
     |> validate_valor_original()
     |> validate_either_saque_or_troco()
   end
 
-  defp validate_valor_original(changeset) do
-    modalidade_alteracao = get_field(changeset, :modalidadeAlteracao)
-    retirada = get_field(changeset, :retirada)
-
-    if not is_nil(retirada) do
-      saque = get_field(retirada, :saque)
-      troco = get_field(retirada, :troco)
-
-      cond do
-        is_nil(saque) and is_nil(troco) and modalidade_alteracao == 0 ->
-          validate_number(changeset, :original, greater_than: 0)
-
-        is_nil(saque) and is_nil(troco) and modalidade_alteracao == 1 ->
-          validate_number(changeset, :original, greater_than_or_equal_to: 0)
-
-        not is_nil(saque) and is_nil(troco) ->
-          validate_number(changeset, :original, equals_to: 0)
-
-        is_nil(saque) and not is_nil(troco) ->
-          validate_number(changeset, :original, greater_than: 0)
-      end
-    else
-      cond do
-        modalidade_alteracao == 0 ->
-          validate_number(changeset, :original, greater_than: 0)
-
-        modalidade_alteracao == 1 ->
-          validate_number(changeset, :original, greater_than_or_equal_to: 0)
-      end
-    end
-  end
-
-  defp validate_either_saque_or_troco(changeset) do
-    modalidade_alteracao = get_field(changeset, :modalidadeAlteracao)
-    retirada = get_field(changeset, :retirada)
-
-    if not is_nil(retirada) do
-      saque = get_field(retirada, :saque)
-      troco = get_field(retirada, :troco)
-
-      cond do
-        is_nil(saque) and is_nil(troco) ->
-          changeset
-
-        not is_nil(saque) and not is_nil(troco) ->
-          add_error(changeset, :retirada, "only one of saque or troco must be present")
-
-        modalidade_alteracao == 1 ->
-          add_error(changeset, :modalidadeAlteracao, "must be 0 when it is troco or saque")
-
-        not is_nil(saque) ->
-          cast_embed(changeset, :retirada, with: &saque_changeset/2, required: true)
-
-        not is_nil(troco) ->
-          cast_embed(changeset, :retirada, with: &troco_changeset/2, required: true)
-      end
-    else
-      changeset
-    end
+  defp retirada_changeset(model, params) do
+    model
+    |> cast(params, [])
+    |> cast_embed(:saque, with: &saque_changeset/2)
+    |> cast_embed(:troco, with: &troco_changeset/2)
   end
 
   defp saque_changeset(model, params) do
-    model.saque
+    model
     |> cast(params, @saque_required ++ @saque_optional)
     |> validate_required(@saque_required)
     |> validate_inclusion(:modalidadeAlteracao, [0, 1])
@@ -247,7 +194,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
   end
 
   defp troco_changeset(model, params) do
-    model.troco
+    model
     |> cast(params, @troco_required ++ @troco_optional)
     |> validate_required(@troco_required)
     |> validate_inclusion(:modalidadeAlteracao, [0, 1])
@@ -262,12 +209,67 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
 
     cond do
       modalidade_alteracao == 0 ->
+        validate_number(changeset, :valor, greater_than: 0)
+
+      modalidade_alteracao == 1 ->
+        validate_number(changeset, :valor, greater_than_or_equal_to: 0)
+    end
+  end
+
+  defp validate_valor_original(%{changes: %{retirada: _saque_or_troco}} = changeset) do
+    modalidade_alteracao = get_field(changeset, :modalidadeAlteracao)
+
+    retirada = get_field(changeset, :retirada)
+    saque = retirada.saque
+    troco = retirada.troco
+
+    cond do
+      is_nil(saque) and is_nil(troco) and modalidade_alteracao == 0 ->
+        validate_number(changeset, :original, greater_than: 0)
+
+      is_nil(saque) and is_nil(troco) and modalidade_alteracao == 1 ->
+        validate_number(changeset, :original, greater_than_or_equal_to: 0)
+
+      not is_nil(saque) and is_nil(troco) ->
+        validate_number(changeset, :original, equal_to: 0)
+
+      is_nil(saque) and not is_nil(troco) ->
+        validate_number(changeset, :original, greater_than: 0)
+    end
+  end
+
+  defp validate_valor_original(changeset) do
+    modalidade_alteracao = get_field(changeset, :modalidadeAlteracao)
+
+    cond do
+      modalidade_alteracao == 0 ->
         validate_number(changeset, :original, greater_than: 0)
 
       modalidade_alteracao == 1 ->
         validate_number(changeset, :original, greater_than_or_equal_to: 0)
     end
   end
+
+  defp validate_either_saque_or_troco(%{changes: %{retirada: _saque_or_troco}} = changeset) do
+    modalidade_alteracao = get_field(changeset, :modalidadeAlteracao)
+    retirada = get_field(changeset, :retirada)
+
+    saque = retirada.saque
+    troco = retirada.troco
+
+    cond do
+      not is_nil(saque) and not is_nil(troco) ->
+        add_error(changeset, :retirada, "only one of saque or troco must be present")
+
+      modalidade_alteracao == 1 ->
+        add_error(changeset, :modalidadeAlteracao, "must be 0 when it is troco or saque")
+
+      true ->
+        changeset
+    end
+  end
+
+  defp validate_either_saque_or_troco(changeset), do: changeset
 
   defp info_adicionais_changeset(model, params) do
     model
