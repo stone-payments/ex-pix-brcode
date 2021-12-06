@@ -16,7 +16,13 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
   @calendario_optional [:expiracao]
 
   @valor_required [:original]
-  @valor_optional []
+  @valor_optional [:modalidadeAlteracao]
+
+  @saque_required [:valor, :prestadorDoServicoDeSaque, :modalidadeAgente]
+  @saque_optional [:modalidadeAlteracao]
+
+  @troco_required [:valor, :prestadorDoServicoDeSaque, :modalidadeAgente]
+  @troco_optional [:modalidadeAlteracao]
 
   embedded_schema do
     field :revisao, :integer
@@ -42,6 +48,23 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
 
     embeds_one :valor, Valor, primary_key: false do
       field :original, :decimal
+      field :modalidadeAlteracao, :integer, default: 0
+
+      embeds_one :retirada, Retirada, primary_key: false do
+        embeds_one :saque, Saque, primary_key: false do
+          field :valor, :decimal
+          field :modalidadeAlteracao, :integer, default: 0
+          field :prestadorDoServicoDeSaque, :string
+          field :modalidadeAgente, :string
+        end
+
+        embeds_one :troco, Troco, primary_key: false do
+          field :valor, :decimal
+          field :modalidadeAlteracao, :integer, default: 0
+          field :prestadorDoServicoDeSaque, :string
+          field :modalidadeAgente, :string
+        end
+      end
     end
 
     embeds_many :infoAdicionais, InfoAdicionais, primary_key: false do
@@ -76,19 +99,6 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
     |> validate_required(@calendario_required)
   end
 
-  defp info_adicionais_changeset(model, params) do
-    model
-    |> cast(params, [:nome, :valor])
-    |> validate_required([:nome, :valor])
-  end
-
-  defp valor_changeset(model, params) do
-    model
-    |> cast(params, @valor_required ++ @valor_optional)
-    |> validate_required(@valor_required)
-    |> validate_number(:original, greater_than: 0)
-  end
-
   defp devedor_changeset(model, params) do
     model
     |> cast(params, [:nome, :cpf, :cnpj])
@@ -115,5 +125,128 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPayment do
       true ->
         Changesets.validate_document(changeset, :cnpj)
     end
+  end
+
+  defp valor_changeset(model, params) do
+    model
+    |> cast(params, @valor_required ++ @valor_optional)
+    |> validate_required(@valor_required)
+    |> validate_inclusion(:modalidadeAlteracao, [0, 1])
+    |> cast_embed(:retirada, with: &retirada_changeset/2)
+    |> validate_valor_original()
+    |> validate_either_saque_or_troco()
+  end
+
+  defp retirada_changeset(model, params) do
+    model
+    |> cast(params, [])
+    |> cast_embed(:saque, with: &saque_changeset/2)
+    |> cast_embed(:troco, with: &troco_changeset/2)
+  end
+
+  defp saque_changeset(model, params) do
+    model
+    |> cast(params, @saque_required ++ @saque_optional)
+    |> validate_required(@saque_required)
+    |> validate_inclusion(:modalidadeAlteracao, [0, 1])
+    |> validate_valor()
+    |> validate_length(:prestadorDoServicoDeSaque, is: 8)
+    |> validate_format(:prestadorDoServicoDeSaque, ~r/^[[:digit:]]+$/)
+    |> validate_inclusion(:modalidadeAgente, ["AGTEC", "AGTOT", "AGPSS"])
+  end
+
+  defp troco_changeset(model, params) do
+    model
+    |> cast(params, @troco_required ++ @troco_optional)
+    |> validate_required(@troco_required)
+    |> validate_inclusion(:modalidadeAlteracao, [0, 1])
+    |> validate_valor()
+    |> validate_length(:prestadorDoServicoDeSaque, is: 8)
+    |> validate_format(:prestadorDoServicoDeSaque, ~r/^[[:digit:]]+$/)
+    |> validate_inclusion(:modalidadeAgente, ["AGTEC"])
+  end
+
+  defp validate_valor(changeset) do
+    modalidade_alteracao = get_field(changeset, :modalidadeAlteracao)
+
+    cond do
+      modalidade_alteracao == 0 ->
+        validate_number(changeset, :valor, greater_than: 0)
+
+      modalidade_alteracao == 1 ->
+        validate_number(changeset, :valor, greater_than_or_equal_to: 0)
+    end
+  end
+
+  defp validate_valor_original(%{changes: %{retirada: _saque_or_troco}} = changeset) do
+    modalidade_alteracao = get_field(changeset, :modalidadeAlteracao)
+
+    retirada = get_field(changeset, :retirada)
+    saque = retirada.saque
+    troco = retirada.troco
+
+    cond do
+      is_nil(saque) and is_nil(troco) and modalidade_alteracao == 0 ->
+        validate_number(changeset, :original, greater_than: 0)
+
+      is_nil(saque) and is_nil(troco) and modalidade_alteracao == 1 ->
+        validate_number(changeset, :original, greater_than_or_equal_to: 0)
+
+      not is_nil(saque) and is_nil(troco) ->
+        validate_number(changeset, :original, equal_to: 0)
+
+      is_nil(saque) and not is_nil(troco) ->
+        validate_number(changeset, :original, greater_than: 0)
+
+      true ->
+        changeset
+    end
+  end
+
+  defp validate_valor_original(changeset) do
+    modalidade_alteracao = get_field(changeset, :modalidadeAlteracao)
+
+    cond do
+      modalidade_alteracao == 0 ->
+        validate_number(changeset, :original, greater_than: 0)
+
+      modalidade_alteracao == 1 ->
+        validate_number(changeset, :original, greater_than_or_equal_to: 0)
+    end
+  end
+
+  defp validate_either_saque_or_troco(%{changes: %{retirada: _saque_or_troco}} = changeset) do
+    modalidade_alteracao = get_field(changeset, :modalidadeAlteracao)
+    retirada = get_field(changeset, :retirada)
+
+    saque = retirada.saque
+    troco = retirada.troco
+
+    cond do
+      not is_nil(saque) and not is_nil(troco) ->
+        add_error(
+          changeset,
+          :retirada,
+          "only one of withdrawal or payment with change must be present"
+        )
+
+      modalidade_alteracao == 1 ->
+        add_error(
+          changeset,
+          :modalidadeAlteracao,
+          "must be 0 when it is withdrawal or payment with change"
+        )
+
+      true ->
+        changeset
+    end
+  end
+
+  defp validate_either_saque_or_troco(changeset), do: changeset
+
+  defp info_adicionais_changeset(model, params) do
+    model
+    |> cast(params, [:nome, :valor])
+    |> validate_required([:nome, :valor])
   end
 end
