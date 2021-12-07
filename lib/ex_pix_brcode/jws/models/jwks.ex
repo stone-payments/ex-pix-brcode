@@ -98,6 +98,7 @@ defmodule ExPixBRCode.JWS.Models.JWKS do
   defp validate_rsa_key(changeset, n, e), do: validate_rsa_params(changeset, n, e)
 
   defp validate_rsa_params(changeset, n, e) do
+    # https://datatracker.ietf.org/doc/html/rfc7518#section-6.3.1
     case {:n, Base.url_decode64(n, padding: false), :e, Base.url_decode64(e, padding: false)} do
       {:n, :error, :e, :error} ->
         changeset
