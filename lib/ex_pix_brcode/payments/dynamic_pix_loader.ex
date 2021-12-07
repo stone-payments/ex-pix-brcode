@@ -38,6 +38,8 @@ defmodule ExPixBRCode.Payments.DynamicPixLoader do
       {:error, _} = err ->
         err
     end
+  rescue
+    _ -> :error
   end
 
   defp do_process_jws(client, url, jws, opts) do

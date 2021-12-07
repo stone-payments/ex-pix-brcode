@@ -14,7 +14,7 @@ defmodule ExPixBRCode.Payments.DynamicPixLoaderTest do
 
   @client Tesla.client([], Tesla.Mock)
 
-  setup_all do
+  setup do
     ca_key = X509.PrivateKey.new_rsa(1024)
 
     ca =
@@ -98,7 +98,22 @@ defmodule ExPixBRCode.Payments.DynamicPixLoaderTest do
       ]
     }
 
-    {:ok, jku: jku, signer: signer, signerS256: signerS256, jwks: jwks}
+    invalid_jwk = %{
+      "keys" => [
+        %{
+          "kid" => kid,
+          "x5c" => x5c,
+          "x5t" => thumbprint,
+          "kty" => "RSA",
+          "e" => "AQAB",
+          "n" =>
+            "0DO2yRYKsVKTbkUTyjkd6a5qLLQRhlkmzOek2ZLLX8ohaZU8NDGjLCvLCA8kPM7cS7j/7uE8g2tskBMsiIyiS8EZ6HzDbdx4A60ncvrAiGb0Y9dZETtld2W3Wf8EaveIdllLOy0379CQw9v/rvHLaJvr1/Rjp5je4LSMTiSW7nDSliNq41hwfXBoSRtst6fmejTL81Bvmn7TjYgQohwu++dRhhltlJJLEl/eAffx7JZLbDFC4WRWk1jbCbf2Q80NlEftm72gDUz79nLg2Dv6igaH3pm8X7mBrgmmxscy5Jmdn32zcvTvwZVEFa0ri7S96Ho4BZdCTuacMrPxq7sjEw",
+          "key_ops" => ["verify"]
+        }
+      ]
+    }
+
+    {:ok, jku: jku, signer: signer, signerS256: signerS256, jwks: jwks, invalid_jwk: invalid_jwk}
   end
 
   describe "load_pix/2" do
@@ -348,6 +363,24 @@ defmodule ExPixBRCode.Payments.DynamicPixLoaderTest do
       kid = ctx.jwks["keys"] |> hd() |> Map.get("kid")
       key = {x5t, kid}
       assert %{^key => _} = :persistent_term.get(ctx.jku)
+    end
+
+    test "validates parameters for RSA public keys",
+         %{jku: jku, invalid_jwk: invalid_jwk} = ctx do
+      payment = build_pix_payment() |> with_key(:cpf)
+      pix_url = "https://somepixpsp.br/pix/v2/#{Ecto.UUID.generate()}"
+
+      Tesla.Mock.mock(fn
+        %{url: ^pix_url} ->
+          %{}
+          |> Joken.generate_and_sign!(payment, ctx.signer)
+          |> Tesla.Mock.text(headers: [{"content-type", "application/jose"}])
+
+        %{url: ^jku} ->
+          Tesla.Mock.json(invalid_jwk)
+      end)
+
+      assert {:error, {:validation, _}} = DynamicPixLoader.load_pix(@client, pix_url)
     end
   end
 
