@@ -117,6 +117,7 @@ defmodule ExPixBRCode.JWS.Models.JWKS do
   end
 
   defp validate_curve_params(changeset, x, y) do
+    # https://datatracker.ietf.org/doc/html/rfc7518#section-6.2.1
     case {:x, Base.url_decode64(x, padding: false), :y, Base.url_decode64(y, padding: false)} do
       {:x, :error, :y, :error} ->
         changeset
