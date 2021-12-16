@@ -41,16 +41,16 @@ defmodule ExPixBRCode.Changesets do
 
     cond do
       String.contains?(field_str, "cpf") ->
-        String.length(document) == 11 and Brcpfcnpj.cpf_valid?(%Cpf{number: document})
+        String.length(document) == 11 and Brcpfcnpj.cpf_valid?(document)
 
       String.contains?(field_str, "cnpj") ->
-        String.length(document) == 14 and Brcpfcnpj.cnpj_valid?(%Cnpj{number: document})
+        String.length(document) == 14 and Brcpfcnpj.cnpj_valid?(document)
 
       String.length(document) == 11 ->
-        Brcpfcnpj.cpf_valid?(%Cpf{number: document})
+        Brcpfcnpj.cpf_valid?(document)
 
       String.length(document) == 14 ->
-        Brcpfcnpj.cnpj_valid?(%Cnpj{number: document})
+        Brcpfcnpj.cnpj_valid?(document)
 
       true ->
         false
