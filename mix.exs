@@ -22,7 +22,7 @@ defmodule ExPixBRCode.MixProject do
       {:ecto, "~> 3.5"},
       {:crc, "~> 0.10.1"},
       {:tesla, "~> 1.4.0"},
-      {:brcpfcnpj, "~> 0.2.1"},
+      {:brcpfcnpj, "~> 1.0.0"},
       {:joken, "~> 2.3.0"},
       {:jason, "~> 1.2.2"},
       {:x509, "~> 0.8.2"},
