@@ -20,15 +20,15 @@ defmodule ExPixBRCode.MixProject do
   defp deps do
     [
       {:ecto, "~> 3.5"},
-      {:crc, "~> 0.10.1"},
-      {:tesla, "~> 1.4.0"},
+      {:crc, "~> 0.10.2"},
+      {:tesla, "~> 1.4.4"},
       {:brcpfcnpj, "~> 1.0.0"},
-      {:joken, "~> 2.3.0"},
-      {:jason, "~> 1.2.2"},
+      {:joken, "~> 2.4.0"},
+      {:jason, "~> 1.2"},
       {:x509, "~> 0.8.2"},
 
       # test
-      {:hackney, "~> 1.16.0"},
+      {:hackney, "~> 1.17"},
       {:mox, "~> 1.0", only: :test}
     ]
   end
