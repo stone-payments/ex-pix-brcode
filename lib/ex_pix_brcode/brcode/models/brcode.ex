@@ -35,7 +35,7 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
       # Static fields
       field :chave, :string
       field :info_adicional, :string
-      field :pss, :string
+      field :fss, :string
 
       # Dynamic fields
       field :url, :string
@@ -116,13 +116,13 @@ defmodule ExPixBRCode.BRCodes.Models.BRCode do
 
   defp validate_merchant_acc_info(model, params) do
     model
-    |> cast(params, [:gui, :chave, :url, :info_adicional, :pss])
+    |> cast(params, [:gui, :chave, :url, :info_adicional, :fss])
     |> validate_required([:gui])
     |> validate_inclusion(:gui, ["br.gov.bcb.pix", "BR.GOV.BCB.PIX"])
     |> validate_length(:chave, min: 1, max: 77)
     |> validate_length(:info_adicional, min: 1, max: 72)
     |> validate_length(:url, min: 1, max: 77)
-    |> validate_length(:pss, is: 8)
+    |> validate_length(:fss, is: 8)
     |> validate_per_type()
   end
 
