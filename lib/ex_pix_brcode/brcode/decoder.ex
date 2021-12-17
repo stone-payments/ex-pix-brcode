@@ -15,7 +15,7 @@ defmodule ExPixBRCode.BRCodes.Decoder do
          "00" => "gui",
          "01" => "chave",
          "02" => "info_adicional",
-         "03" => "pss",
+         "03" => "fss",
          "25" => "url"
        }},
     "52" => "merchant_category_code",

@@ -21,7 +21,7 @@ defmodule ExPixBRCode.PaymentTest do
                  chave: "123e4567-e12b-12d1-a456-426655440000",
                  gui: "br.gov.bcb.pix",
                  info_adicional: nil,
-                 pss: nil,
+                 fss: nil,
                  url: nil
                },
                merchant_category_code: "0000",
@@ -62,7 +62,7 @@ defmodule ExPixBRCode.PaymentTest do
                  chave: "11111111111",
                  gui: "BR.GOV.BCB.PIX",
                  info_adicional: "Vacina covid",
-                 pss: "16501555",
+                 fss: "16501555",
                  url: nil
                },
                merchant_category_code: "0000",
