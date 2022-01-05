@@ -129,7 +129,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicPixPaymentWithDueDateTest do
           "cpf" => Brcpfcnpj.cpf_generate(),
           "nome" => "Cicrano"
         },
-        "valor" => %{"original" => "1.30", "final" => "1.30", "desconto" => "0.00"},
+        "valor" => %{"original" => "1.30", "final" => "1.30", "desconto" => "-0.30"},
         "recebedor" => %{
           "cpf" => Brcpfcnpj.cpf_generate(),
           "nome" => "Fulano",
