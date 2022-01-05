@@ -144,7 +144,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicPixPaymentWithDueDateTest do
                Changesets.cast_and_apply(DynamicPixPaymentWithDueDate, payload)
     end
 
-    test "successfully validates an invalid payload with zero values on valor attributes" do
+    test "successfully validates a payload with zero values on valor attributes" do
       payload = %{
         "revisao" => 0,
         "chave" => "9463d2b0-2b1a-4157-80fe-344ccf0f7e13",
