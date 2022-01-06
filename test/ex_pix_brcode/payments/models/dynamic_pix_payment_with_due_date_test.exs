@@ -113,7 +113,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicPixPaymentWithDueDateTest do
                Changesets.cast_and_apply(DynamicPixPaymentWithDueDate, payload)
     end
 
-    test "successfully validates an invalid payload with zero values on valor attribute" do
+    test "successfully validates an invalid payload with negative values on valor attribute" do
       payload = %{
         "revisao" => 0,
         "chave" => "9463d2b0-2b1a-4157-80fe-344ccf0f7e13",
@@ -129,7 +129,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicPixPaymentWithDueDateTest do
           "cpf" => Brcpfcnpj.cpf_generate(),
           "nome" => "Cicrano"
         },
-        "valor" => %{"original" => "1.30", "final" => "1.30", "desconto" => "0.00"},
+        "valor" => %{"original" => "1.30", "final" => "1.30", "desconto" => "-0.30"},
         "recebedor" => %{
           "cpf" => Brcpfcnpj.cpf_generate(),
           "nome" => "Fulano",
@@ -141,6 +141,44 @@ defmodule ExPixBRCode.Payments.Models.DynamicPixPaymentWithDueDateTest do
       }
 
       assert {:error, {:validation, _}} =
+               Changesets.cast_and_apply(DynamicPixPaymentWithDueDate, payload)
+    end
+
+    test "successfully validates a payload with zero values on valor attributes" do
+      payload = %{
+        "revisao" => 0,
+        "chave" => "9463d2b0-2b1a-4157-80fe-344ccf0f7e13",
+        "status" => "ATIVA",
+        "txid" => "1234",
+        "solicitacaoPagador" => "Solicitação",
+        "calendario" => %{
+          "criacao" => "2021-02-24 22:10:58.154290Z",
+          "apresentacao" => "2021-02-24 22:23:49.246328Z",
+          "dataDeVencimento" => "2021-02-28 22:23:49.246328Z"
+        },
+        "devedor" => %{
+          "cpf" => Brcpfcnpj.cpf_generate(),
+          "nome" => "Cicrano"
+        },
+        "valor" => %{
+          "original" => "1.30",
+          "final" => "1.30",
+          "desconto" => "0.00",
+          "juros" => "0.00",
+          "multa" => "0.00",
+          "abatimento" => "0.00"
+        },
+        "recebedor" => %{
+          "cpf" => Brcpfcnpj.cpf_generate(),
+          "nome" => "Fulano",
+          "cidade" => "Rio de Janeiro",
+          "uf" => "RJ",
+          "cep" => "28610-160",
+          "logradouro" => "Avenida Brasil"
+        }
+      }
+
+      assert {:ok, %DynamicPixPaymentWithDueDate{}} =
                Changesets.cast_and_apply(DynamicPixPaymentWithDueDate, payload)
     end
   end

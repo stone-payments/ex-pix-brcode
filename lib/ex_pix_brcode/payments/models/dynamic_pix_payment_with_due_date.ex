@@ -179,9 +179,9 @@ defmodule ExPixBRCode.Payments.Models.DynamicPixPaymentWithDueDate do
     model
     |> cast(params, @valor_required ++ @valor_optional)
     |> validate_required(@valor_required)
-    |> validate_number(:abatimento, greater_than: 0)
-    |> validate_number(:desconto, greater_than: 0)
-    |> validate_number(:juros, greater_than: 0)
-    |> validate_number(:multa, greater_than: 0)
+    |> validate_number(:abatimento, greater_than_or_equal_to: 0)
+    |> validate_number(:desconto, greater_than_or_equal_to: 0)
+    |> validate_number(:juros, greater_than_or_equal_to: 0)
+    |> validate_number(:multa, greater_than_or_equal_to: 0)
   end
 end
