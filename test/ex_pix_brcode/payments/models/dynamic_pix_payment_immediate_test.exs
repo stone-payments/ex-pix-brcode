@@ -138,7 +138,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPaymentTest do
       assert errors == [
                original:
                  {"must be greater than %{number}",
-                  [validation: :number, kind: :greater_than, number: 0]}
+                  [validation: :number, kind: :greater_than, number: Decimal.new(0)]}
              ]
     end
 
@@ -241,7 +241,8 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPaymentTest do
 
       assert errors == [
                original:
-                 {"must be equal to %{number}", [validation: :number, kind: :equal_to, number: 0]}
+                 {"must be equal to %{number}",
+                  [validation: :number, kind: :equal_to, number: Decimal.new(0)]}
              ]
     end
 
@@ -322,7 +323,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPaymentTest do
       assert errors == [
                valor:
                  {"must be greater than %{number}",
-                  [validation: :number, kind: :greater_than, number: 0]}
+                  [validation: :number, kind: :greater_than, number: Decimal.new(0)]}
              ]
     end
 
@@ -587,7 +588,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPaymentTest do
       assert errors == [
                original:
                  {"must be greater than %{number}",
-                  [validation: :number, kind: :greater_than, number: 0]}
+                  [validation: :number, kind: :greater_than, number: Decimal.new(0)]}
              ]
     end
 
@@ -668,7 +669,7 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPaymentTest do
       assert errors == [
                valor:
                  {"must be greater than %{number}",
-                  [validation: :number, kind: :greater_than, number: 0]}
+                  [validation: :number, kind: :greater_than, number: Decimal.new(0)]}
              ]
     end
 
