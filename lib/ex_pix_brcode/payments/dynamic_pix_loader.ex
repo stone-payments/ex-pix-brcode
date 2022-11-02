@@ -24,7 +24,7 @@ defmodule ExPixBRCode.Payments.DynamicPixLoader do
   """
   @spec load_pix(Tesla.Client.t(), String.t(), keyword()) ::
           {:ok, DynamicImmediatePixPayment.t() | DynamicPixPaymentWithDueDate.t()}
-          | {:error, atom() | map()}
+          | {:error, map()}
   def load_pix(client, url, opts \\ []) do
     query_params = extract_query_params(opts)
 
