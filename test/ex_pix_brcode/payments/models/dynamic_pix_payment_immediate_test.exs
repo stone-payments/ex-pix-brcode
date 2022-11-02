@@ -143,9 +143,10 @@ defmodule ExPixBRCode.Payments.Models.DynamicImmediatePixPaymentTest do
     end
 
     for modalidadeAgente <- ["AGTEC", "AGTOT", "AGPSS"] do
-      test "successfully validates a proper withdrawal payload without optional fields and 'saque.modalidadeAgente' #{
-             modalidadeAgente
-           } " do
+      test """
+      successfully validates a proper withdrawal payload without optional fields
+      and 'saque.modalidadeAgente' #{modalidadeAgente}
+      """ do
         payload = %{
           "calendario" => %{
             "apresentacao" => "2020-11-25T18:06:39Z",

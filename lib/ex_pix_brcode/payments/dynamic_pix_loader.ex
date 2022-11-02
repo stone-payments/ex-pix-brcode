@@ -24,7 +24,7 @@ defmodule ExPixBRCode.Payments.DynamicPixLoader do
   """
   @spec load_pix(Tesla.Client.t(), String.t(), keyword()) ::
           {:ok, DynamicImmediatePixPayment.t() | DynamicPixPaymentWithDueDate.t()}
-          | {:error, atom()}
+          | {:error, atom() | map()}
   def load_pix(client, url, opts \\ []) do
     query_params = extract_query_params(opts)
 
@@ -32,8 +32,8 @@ defmodule ExPixBRCode.Payments.DynamicPixLoader do
       {:ok, %{status: status} = env} when is_success(status) ->
         do_process_jws(client, url, env.body, opts)
 
-      {:ok, _} ->
-        {:error, :http_status_not_success}
+      {:ok, %{status: status, body: body, headers: headers}} ->
+        {:error, %{status: status, body: body, headers: headers}}
 
       {:error, _} = err ->
         err
