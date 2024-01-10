@@ -320,6 +320,20 @@ defmodule ExPixBRCode.Payments.DynamicPixLoaderTest do
       end
     end
 
+    for {status, body} <- [{404, "NotFound"}, {410, "Gone"}] do
+      test "should return exact error when http request is not successful for status = #{status}" do
+        Tesla.Mock.mock(fn _ ->
+          %Tesla.Env{status: unquote(status), body: unquote(body)}
+        end)
+
+        assert {:error, %{body: unquote(body), status: unquote(status), headers: []}} ==
+                 DynamicPixLoader.load_pix(
+                   @client,
+                   "https://somepixpsp.br/pix/v2/#{Ecto.UUID.generate()}"
+                 )
+      end
+    end
+
     test "can skip certifica validations", %{jku: jku} = ctx do
       payment = build_pix_payment()
       pix_url = "https://somepixpsp.br/pix/v2/#{Ecto.UUID.generate()}"
