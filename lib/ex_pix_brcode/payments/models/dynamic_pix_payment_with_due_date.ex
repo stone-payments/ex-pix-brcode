@@ -179,10 +179,10 @@ defmodule ExPixBRCode.Payments.Models.DynamicPixPaymentWithDueDate do
   defp put_change_for_empty_string(changeset, params, fields) do
     Enum.reduce(fields, changeset, fn field, acc ->
       string_field = Atom.to_string(field)
-      nome_value = get_field(acc, field)
+      field_value = get_field(acc, field)
       params_value = params[string_field]
 
-      if is_nil(nome_value) and
+      if is_nil(field_value) and
            is_binary(params_value) and
            String.trim(params_value) == "" do
         put_change(acc, field, "")
