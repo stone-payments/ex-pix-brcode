@@ -170,9 +170,36 @@ defmodule ExPixBRCode.Payments.Models.DynamicPixPaymentWithDueDate do
   defp info_adicionais_changeset(model, params) do
     model
     |> cast(params, [:nome, :valor])
-    |> validate_required([:nome, :valor])
+    |> put_change_for_empty_string(params, [:nome, :valor])
+    |> custom_validate_required([:nome, :valor])
     |> validate_length(:nome, less_than_or_equal_to: 50)
     |> validate_length(:valor, less_than_or_equal_to: 200)
+  end
+
+  defp put_change_for_empty_string(changeset, params, fields) do
+    Enum.reduce(fields, changeset, fn field, acc ->
+      string_field = Atom.to_string(field)
+      field_value = get_field(acc, field)
+      params_value = params[string_field]
+
+      if is_nil(field_value) and
+           is_binary(params_value) and
+           String.trim(params_value) == "" do
+        put_change(acc, field, "")
+      else
+        acc
+      end
+    end)
+  end
+
+  defp custom_validate_required(changeset, fields) do
+    Enum.reduce(fields, changeset, fn field, acc ->
+      if get_field(acc, field) == "" do
+        acc
+      else
+        validate_required(acc, [field])
+      end
+    end)
   end
 
   defp valor_changeset(model, params) do
